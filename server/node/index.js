@@ -2,9 +2,9 @@ const mysql = require('mysql');
 
 var dbsrv = {
   host: 'localhost',
-  user: 'kii001',
-  password: 'kyodai',
-  database: 'dbsrv',
+  user: '****',
+  password: '****',
+  database: 'dbserver',
   timezone: 'utc',
   dateStrings: 'date'
 }

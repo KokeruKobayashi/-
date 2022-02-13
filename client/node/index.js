@@ -10,9 +10,9 @@ var clientdata = {
 
 var dbparam = {
   host: 'localhost',
-  user: 'kii001',
-  password: 'kyodai',
-  database: 'db00',
+  user: '****',
+  password: '****',
+  database: 'dbclient',
 }
 
 var cors = {

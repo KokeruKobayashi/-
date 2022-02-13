@@ -9,8 +9,6 @@ UIkit.use(Icons);
 
 Vue.component('maincomponent', require('./main.vue').default );
 
-//test用
-Vue.component('test',require('./test.vue').default);
 
 const app = new Vue({
         el: '#app',

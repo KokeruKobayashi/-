@@ -1,6 +1,6 @@
 <template>
 <div class='uk-card uk-card-body uk-card-default'>
-    あいうえお
+    hogehoge
 </div>
 </template>
 

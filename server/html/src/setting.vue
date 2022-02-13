@@ -1,6 +1,6 @@
 <template>
 <div class='uk-card uk-card-body uk-card-default'>
-    かきくけこ
+    fugafuga
 </div>
 </template>
 

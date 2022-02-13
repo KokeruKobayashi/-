@@ -1,9 +1,6 @@
 <template>
 <div class="uk-card uk-card-body uk-card-default">
 
-
-  <div>{{clientActionResultValue}}</div>
-  <div>{{deviceData}}</div>
   <ul class='uk-list uk-list-hyphen'>
   <li v-for="(item,index) in deviceData" :key='index'> 
     {{item.client.clientData.name}}

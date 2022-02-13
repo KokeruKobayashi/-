@@ -55,9 +55,6 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   props: ['deviceData', 'clientActionResultValue'],
   data: function data() {
@@ -25592,10 +25589,6 @@ var render = function () {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", { staticClass: "uk-card uk-card-body uk-card-default" }, [
-    _c("div", [_vm._v(_vm._s(_vm.clientActionResultValue))]),
-    _vm._v(" "),
-    _c("div", [_vm._v(_vm._s(_vm.deviceData))]),
-    _vm._v(" "),
     _c(
       "ul",
       { staticClass: "uk-list uk-list-hyphen" },

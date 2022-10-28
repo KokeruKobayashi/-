@@ -4,8 +4,8 @@ console.log("Hello!! This is server.");
 
 var dbsrv = {
   host: "localhost",
-  user: "kii001",
-  password: "kyodai",
+  user: "****",
+  password: "****",
   database: "dbserver",
   timezone: "utc",
   dateStrings: "date",

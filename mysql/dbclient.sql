@@ -15,31 +15,53 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
---
--- Table structure for table `Device`
---
 
-DROP TABLE IF EXISTS `Device`;
+DROP TABLE IF EXISTS `devices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Device` (
-  `ID` int NOT NULL AUTO_INCREMENT,
-  `Device` varchar(50) NOT NULL,
-  `Model` varchar(50) NOT NULL,
-  `Company` varchar(50) NOT NULL,
-  `SerialNumber` varchar(50) NOT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `devices` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `device` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `model` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `company` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `serialnumber` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `script` varchar(100) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'NoScript',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Device`
+-- Dumping data for table `devices`
 --
 
-LOCK TABLES `Device` WRITE;
-/*!40000 ALTER TABLE `Device` DISABLE KEYS */;
-INSERT INTO `Device` VALUES (4,'thermometer','E5CD-QX2A6','OMRON','09320M'),(5,'test','test','test','12345678'),(6,'test2','test','test','1234'),(7,'syringePump','PHDULTRA','HarvardApparatus','D-404630');
-/*!40000 ALTER TABLE `Device` ENABLE KEYS */;
+LOCK TABLES `devices` WRITE;
+/*!40000 ALTER TABLE `devices` DISABLE KEYS */;
+INSERT INTO `devices` VALUES (1,'test','model','company','1234-5678','test.py');
+/*!40000 ALTER TABLE `devices` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `raspberrypi_infomations`
+--
+
+DROP TABLE IF EXISTS `raspberrypi_infomations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `raspberrypi_infomations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `detail` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `raspberrypi_infomations`
+--
+
+LOCK TABLES `raspberrypi_infomations` WRITE;
+/*!40000 ALTER TABLE `raspberrypi_infomations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `raspberrypi_infomations` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -51,4 +73,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-02-14  2:19:16
+-- Dump completed on 2022-10-28 16:28:34

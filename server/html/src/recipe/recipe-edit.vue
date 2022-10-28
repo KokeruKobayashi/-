@@ -4,16 +4,18 @@
         <div class="uk-modal-header">
            <h2 class="uk-modal-title">{{recipeTitle}}</h2>
            <p>sort by drag and drop</p>
+           <p>click the trash icon, then delete the procedure</p>
         </div>
         <div class='uk-modal-body'>
             <div uk-overflow-auto>
-                    <table class="uk-table uk-table-hover">
+                    <table class="uk-table uk-table-hover" v-if="showTrashProcedure">
                         <thead>
                         <tr>
                             <th></th>
                             <th>Device</th>
                             <th>Action</th>
                             <th>Details</th>
+                            <th><span uk-icon='trash' @click='isTrashActive = !isTrashActive'></span></th>
                         </tr>
                         </thead>
                         <draggable v-model='recipeEditerTemp' tag='tbody'>
@@ -22,10 +24,12 @@
                             <td>{{b.Device}}</td>
                             <td>{{b.Action}}</td>
                             <td>{{b.Details}}</td>
+                            <td><span uk-icon='trash' @click="recipeTrash(b)" v-show="isTrashActive"></span></td>
                         </tr>
                         </draggable>                            
                     </table>
                 </div>
+
 
 
         </div>    
@@ -45,13 +49,15 @@ import draggable from 'vuedraggable'
 export default{
     props:['recipeEditer','recipeTitle'],
 
-     components:{
+    components:{
         draggable,      
     },
 
     data(){
         return{ 
             recipeEditerTemp :[],
+            isTrashActive :false,
+            showTrashProcedure: true,
         }
     },
 
@@ -62,15 +68,18 @@ export default{
         //変更したレシピの順番の配列を親に送る
         recipeEdit(){
             this.$emit('recipeEdit',this.recipeEditerTemp);
+        },     
 
+        recipeTrash(b){
+            this.$emit('recipeTrash',b.ID);
         },
 
-       
     },
 
     watch:{
         recipeEditer: function(){
             this.recipeEditerTemp = this.recipeEditer;
+            console.log('かわってるのか')
         },
     },
 
@@ -82,7 +91,4 @@ export default{
 
 </script>
 <style>
-    .mouse-pointer{
-        cursor:pointer;
-    }
 </style>

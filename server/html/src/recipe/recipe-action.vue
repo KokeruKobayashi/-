@@ -45,7 +45,7 @@
                     <div v-for='(a,index) in recipeDeviceArray' class='uk-text-center' :key='index'>
                         {{a}}
                          <select v-model='selectedDeviceArray[index]' class='uk-select'>
-                            <option disabled :value='{}' selected>--Device Select--</option>
+                            <option disabled :value='null' selected>--Device Select--</option>
                             <option v-for='(d, indexd) in deviceDataArray' :value='d' :key='indexd'>{{d.Device}}({{d.Company}}/{{d.Model}})</option>
                          </select>
                     </div>
@@ -275,6 +275,10 @@ export default{
 
         },
 
+        shortcutRun(){
+            this.newProcedure = [...this.recipeAction[1]];
+        },
+
         clickTable(event){
             var index = this.isSelectedRow.indexOf(event.target.parentNode.rowIndex - 1);
             if(index == -1){
@@ -392,9 +396,11 @@ export default{
           if(this.deviceData.length >0){
              var deviceListTemp = [];
             
+            /*
             this.deviceData.forEach(function(value){
                 deviceListTemp.push(...value.client.deviceList);
             })
+            */
             return deviceListTemp
             }
        },

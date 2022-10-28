@@ -4,12 +4,12 @@
     <div v-show='experimentTitle.isDoing'>
     <ul uk-accordion>
       <li class='uk-open'>
-        <a class='uk-accordion-title' href='#'>{{experimentTitle.Title}}</a>
+        <a class='uk-accordion-title' href='#'>{{experimentTitle.experiment_title}}</a>
         <div class='uk-accordion-content'>
           <p  class='uk-width-2-3'> 
-            <span class='run-infomation'>RunNumber</span>: {{runInfo.ID}}<br>
-            <span class='run-infomation'> Date</span>: {{runInfo.Starting_date}}<br>
-            <span class='run-infomation'> Comment</span>: {{runInfo.Comment}}<br>
+            <span class='run-infomation'>RunNumber</span>: {{runInfo.id}}<br>
+            <span class='run-infomation'> Date</span>: {{runInfo.created_at}}<br>
+            <span class='run-infomation'> Comment</span>: {{runInfo.comment}}<br>
             <a href='#new-comment' uk-toggle @click='commentSet'>Add comment</a>
           </p>      
         </div>
@@ -33,6 +33,17 @@
       <button class="uk-button uk-button-default"  disabled>Resume</button>
     </div>
     
+    
+      <!-- 実験終了ショートカットボタン --
+     <button class="uk-button uk-button-danger uk-modal-close" @click='experimentDone' type="button">☆☆DONE☆☆</button> 
+      -->
+    <br>
+
+     <div>
+      Time elapsed (this procedure) : {{sstateNow.timeDiff}}<span v-if="sstateNow.timeDiff == null">- </span> second
+      <div v-if="sstateNow.temp !== null">Temperature : {{sstateNow.temp}} ℃</div>
+     </div>
+
       <table class="uk-table uk-table-hover uk-width-2-3">
         <thead>
           <tr>
@@ -40,21 +51,25 @@
             <th></th>
             <th>Device</th>
             <th>Action</th>
-            <th>Details</th>
+            <th>Detail</th>
+            <th>Result</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(b,index) in experimentRecipe" :key='b.ID'>
+          <tr v-for="(b,index) in experimentRecipe" :key='b.procedureOrder'>
             <td>{{index+1}}</td>
             <td><span v-show='b.isDone' uk-icon="icon: check"></span></td>
-            <td>{{b.Device}}</td>
-            <td>{{b.Action}}</td>
-            <td>{{b.Details}}</td>
+            <td>{{b.device_name}}</td>
+            <td>{{b.action}}</td>
+            <td>{{b.usedDetail}}</td>
+            <td>
+              <div>{{b.result}}</div>
+            </td>
+            
           </tr>
         </tbody>
       </table>
     </div> 
-
 
     <div id='new-comment' uk-modal>
     <div class='uk-modal-dialog uk-modal-body'>
@@ -82,12 +97,13 @@
 
 <script>
 export default {
-  props:['experimentTitle','experimentRecipe','runInfo'],
+  props:['experimentTitle','experimentRecipe','runInfo','sstateNow'],
 
   data(){
     return{
       isBreak:false,
-      runComment:this.runInfo.Comment,
+      runComment:null,
+      testArray:[],
     }
   },
 
@@ -98,7 +114,7 @@ export default {
     },
 
     procedureBreak(){
-      this.isBreak =　true;
+      this.isBreak = true;
       this.$emit('procedureBreak',this.isBreak);
     },
 
@@ -112,16 +128,32 @@ export default {
     },
 
     commentSubmit(){
-      this.$emit('commentSubmit',this.runComment,this.runInfo.ID);
+      this.$emit('commentSubmit',this.runComment,this.runInfo.id);
     },
 
     commentSet(){
-      this.runComment=this.runInfo.Comment;
+      this.runComment=this.runInfo.comment;
     },
 
     experimentDone(){
       this.$emit('experimentDone');
     }
+  },
+
+  watch:{
+    /*
+    sstateNow: function(newVal,oldVal){
+      let index = this.experimentRecipe.findIndex((v) => v.procedureOrder == newVal.procedureOrder);
+      if(index >= 0){
+        if(newVal.Temp !== null){
+          this.$set(this.experimentRecipe[index],'nowStateTemp',newVal.Temp);
+        };
+        console.log("index :" + index)
+        this.$set(this.experimentRecipe[index],'nowStateTimeDiff',JSON.parse(JSON.stringify(newVal.timeDiff)));
+        console.log(JSON.parse(JSON.stringify(newVal.timeDiff)));
+        this.testArray.push(newVal.timeDiff);
+      }
+    },*/
   },
 }
 </script>

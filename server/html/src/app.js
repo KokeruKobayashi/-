@@ -9,7 +9,6 @@ UIkit.use(Icons);
 
 Vue.component('maincomponent', require('./main.vue').default );
 
-
 const app = new Vue({
         el: '#app',
 });

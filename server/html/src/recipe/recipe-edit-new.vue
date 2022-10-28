@@ -14,6 +14,7 @@
                         <option disabled :value='""' selected>--existing device--</option>
                         <option v-for='(d,i) in newDeviceOldArray' :value='d' :key='i'>{{d}}</option>
                     </select>
+                    <input type='radio' v-model="deviceRadio" value="waiting" class="uk-radio" @change="waitDetailSet" id="waitDev"><label for="waitDev">Waiting</label>
                 <br>
                 Action
                     <select v-model='selectedAction' class='uk-select'>
@@ -23,13 +24,12 @@
                 <div v-show='detailFilter(selectedAction)'>  
                     Detail
                     <detailcomponent :selectedAction='selectedAction' :newDetailTemp.sync='newDetailTemp'
-                    :newDetailUnitTemp.sync='newDetailUnitTemp'></detailcomponent>
+                    :newDetailUnitTemp.sync='newDetailUnitTemp' ref='detailComponent'></detailcomponent>
                 </div>
         </div>    
         <div class="uk-modal-footer uk-text-right">
             <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
             <button class="uk-button uk-button-primary uk-modal-close" type="button" @click='recipeEdit'>Add</button>
-            <button class="uk-button uk-button-default" type="button" @click='testetete'>かくにん</button>
         </div>
     </div>
 
@@ -65,18 +65,18 @@ export default{
 
     methods :{
         testetete(){
-            this.newDetail= this.newDetailTemp + ' ' + this.newDetailUnitTemp;
-            console.log(this.newDetail);
+            console.log('テスト');
+        },
 
-            switch(this.deviceRadio){
-                case 'newDev':
-                    this.newDevice = this.newDeviceNew;
-                    break;
-                case 'oldDev':
-                    this.newDevice = this.newDeviceOld;
-                    break;
-
-            }
+        resetEdit(){
+            this.newDevice = '';
+            this.newDetail='';
+            this.newDetailTemp='';
+            this.newDetailUnitTemp='',
+            this.newDeviceNew='',
+            this.newDeviceOld='',
+            this.deviceRadio='',
+            this.selectedAction={};
         },
 
         recipeEdit(){
@@ -88,17 +88,12 @@ export default{
                 case 'oldDev':
                     this.newDevice = this.newDeviceOld;
                     break;
+                case 'waiting':
+                    this.newDevice = '-';
             }
 
             this.$emit('actionEmit',this.newDevice,this.selectedAction,this.newDetail);
-            this.newDevice = '';
-            this.newDetail='';
-            this.newDetailTemp='';
-            this.newDetailUnitTemp='',
-            this.newDeviceNew='',
-            this.newDeviceOld='',
-            this.deviceRadio='',
-            this.selectedAction={};
+            this.resetEdit();
         },
 
         detailFilter(action){
@@ -109,6 +104,8 @@ export default{
                     return true
                 case '--wrate' :
                     return true
+                case '--changePos' :
+                    return true
                 default :
                     return false
             }
@@ -117,23 +114,22 @@ export default{
         radioAutoCheck(num){
             if(num == 0){
                 this.deviceRadio = 'newDev';
-            }else{
+            }else if(num == 1){
                 this.deviceRadio = 'oldDev';
             }
         },
 
         resetDeviceInfo(){
             //モーダルを開いた時に動く関数
-            this.newDevice = '';
-            this.newDetail='';
-            this.newDetailTemp='';
-            this.newDetailUnitTemp='',
-            this.newDeviceNew='',
-            this.newDeviceOld='',
-            this.deviceRadio='',
-            this.selectedAction={};
+            this.resetEdit();
 
             this.deviceRadio = 'newDev';
+            this.$refs.detailComponent.resetValueUnit();
+        },
+        
+        waitDetailSet(){
+            let waitActionIndex = this.actionData.findIndex((elem) => elem.Argument === 'wait');
+            this.selectedAction = this.actionData[waitActionIndex];
         }
     },
 
@@ -148,8 +144,13 @@ export default{
                 return x.ExperimentID == experimentID;
             })]
             let bbbb = [...aaaa].map(x => x.Device);
-            bbbb.push('-');
-            return [...new Set(bbbb)]
+            let cccc = [...new Set(bbbb)];
+            let delIndex = cccc.indexOf('-');
+            if(delIndex >= 0){
+                cccc.splice(delIndex,1);
+            }
+
+            return cccc
        },
     },
     

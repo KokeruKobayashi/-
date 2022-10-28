@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.27, for macos12.0 (arm64)
 --
--- Host: localhost    Database: dbsrv
+-- Host: localhost    Database: 0928hokudai
 -- ------------------------------------------------------
 -- Server version	8.0.27
 
@@ -16,184 +16,331 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `Action`
+-- Table structure for table `actions`
 --
 
-DROP TABLE IF EXISTS `Action`;
+DROP TABLE IF EXISTS `actions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Action` (
-  `ID` int NOT NULL AUTO_INCREMENT,
-  `Action` varchar(50) NOT NULL,
-  `Argument` varchar(20) NOT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `actions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `action` varchar(50) NOT NULL,
+  `argument` varchar(20) DEFAULT NULL,
+  `detail_number` int NOT NULL DEFAULT '0',
+  `is_result_flag` tinyint(1) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Action`
+-- Dumping data for table `actions`
 --
 
-LOCK TABLES `Action` WRITE;
-/*!40000 ALTER TABLE `Action` DISABLE KEYS */;
-INSERT INTO `Action` VALUES (1,'on','--on'),(2,'get the value','--get'),(3,'off','--off'),(4,'waiting','wait'),(5,'set infusion rate','--irate'),(6,'set withdraw rate','--wrate'),(7,'infusion run','--irun'),(8,'withdraw run','--wrun');
-/*!40000 ALTER TABLE `Action` ENABLE KEYS */;
+LOCK TABLES `actions` WRITE;
+/*!40000 ALTER TABLE `actions` DISABLE KEYS */;
+INSERT INTO `actions` VALUES (1,'on','--on',0,0,NULL,NULL),(2,'get the value','--get',0,1,NULL,NULL),(3,'off','--off',0,0,NULL,NULL),(4,'waiting','wait',1,0,NULL,NULL),(5,'set infusion rate and run','--iraterun',2,0,NULL,NULL),(6,'set withdraw rate','--wrate',2,0,NULL,NULL),(7,'infusion run','--irun',0,0,NULL,NULL),(8,'withdraw run','--wrun',0,0,NULL,NULL),(9,'change position','--changePos',1,0,NULL,NULL),(10,'wait for steady-sate','--judge',0,0,NULL,NULL),(11,'set temp. and run','--setrun',1,0,NULL,NULL),(12,'alert','alert',1,0,NULL,NULL);
+/*!40000 ALTER TABLE `actions` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `ActualDevice`
+-- Table structure for table `device_type_action_links`
 --
 
-DROP TABLE IF EXISTS `ActualDevice`;
+DROP TABLE IF EXISTS `device_type_action_links`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `ActualDevice` (
-  `ID` int NOT NULL AUTO_INCREMENT,
-  `RunID` int NOT NULL,
-  `ProcedureID` int NOT NULL,
-  `DeviceID` int NOT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `device_type_action_links` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `device_type_id` int NOT NULL,
+  `action_id` int NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `ActualDevice`
+-- Dumping data for table `device_type_action_links`
 --
 
-LOCK TABLES `ActualDevice` WRITE;
-/*!40000 ALTER TABLE `ActualDevice` DISABLE KEYS */;
-/*!40000 ALTER TABLE `ActualDevice` ENABLE KEYS */;
+LOCK TABLES `device_type_action_links` WRITE;
+/*!40000 ALTER TABLE `device_type_action_links` DISABLE KEYS */;
+INSERT INTO `device_type_action_links` VALUES (1,1,1,NULL,NULL),(2,1,2,NULL,NULL),(3,1,3,NULL,NULL),(4,1,4,NULL,NULL),(5,1,5,NULL,NULL),(6,1,6,NULL,NULL),(7,1,7,NULL,NULL),(8,1,8,NULL,NULL),(10,2,3,NULL,NULL),(11,2,5,NULL,NULL),(12,2,6,NULL,NULL),(13,2,7,NULL,NULL),(14,2,8,NULL,NULL),(15,3,9,NULL,NULL),(16,4,1,NULL,NULL),(17,4,2,NULL,NULL),(18,4,3,NULL,NULL),(19,5,1,NULL,NULL),(20,5,2,NULL,NULL),(21,5,3,NULL,NULL),(22,6,4,NULL,NULL),(23,1,9,NULL,NULL),(24,5,10,NULL,NULL),(26,5,11,NULL,NULL),(27,1,11,NULL,NULL),(28,6,12,NULL,NULL);
+/*!40000 ALTER TABLE `device_type_action_links` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Experiment`
+-- Table structure for table `device_types`
 --
 
-DROP TABLE IF EXISTS `Experiment`;
+DROP TABLE IF EXISTS `device_types`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Experiment` (
-  `ID` int NOT NULL AUTO_INCREMENT,
-  `Title` varchar(256) NOT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `device_types` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `device_type_name` varchar(200) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Experiment`
+-- Dumping data for table `device_types`
 --
 
-LOCK TABLES `Experiment` WRITE;
-/*!40000 ALTER TABLE `Experiment` DISABLE KEYS */;
-INSERT INTO `Experiment` VALUES (1,'test1'),(2,'example1'),(20,'pump test');
-/*!40000 ALTER TABLE `Experiment` ENABLE KEYS */;
+LOCK TABLES `device_types` WRITE;
+/*!40000 ALTER TABLE `device_types` DISABLE KEYS */;
+INSERT INTO `device_types` VALUES (1,'testType',NULL,NULL),(2,'syringePump',NULL,NULL),(3,'6-way valve',NULL,NULL),(4,'thermometer',NULL,NULL),(5,'temperature controller',NULL,NULL),(6,'No device',NULL,NULL);
+/*!40000 ALTER TABLE `device_types` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Experimentalprocedure`
+-- Table structure for table `device_value_choices`
 --
 
-DROP TABLE IF EXISTS `Experimentalprocedure`;
+DROP TABLE IF EXISTS `device_value_choices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Experimentalprocedure` (
-  `ID` int NOT NULL AUTO_INCREMENT,
-  `ExperimentID` int NOT NULL,
-  `Device` varchar(50) NOT NULL DEFAULT '-',
-  `ActionID` int NOT NULL,
-  `ProcedureOrder` int NOT NULL,
-  `Details` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `device_value_choices` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `device_link_id` int NOT NULL,
+  `value` int DEFAULT NULL,
+  `unit` varchar(200) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Experimentalprocedure`
+-- Dumping data for table `device_value_choices`
 --
 
-LOCK TABLES `Experimentalprocedure` WRITE;
-/*!40000 ALTER TABLE `Experimentalprocedure` DISABLE KEYS */;
-INSERT INTO `Experimentalprocedure` VALUES (1,1,'aq',1,3,NULL),(2,1,'bq',1,2,NULL),(3,1,'cq',3,4,NULL),(4,2,'deviceX',1,1,NULL),(5,1,'aq',3,1,NULL),(6,2,'deviceX',2,2,NULL),(7,2,'deviceX',2,4,NULL),(8,19,'a',1,1,NULL),(9,2,'-',4,3,'2'),(10,19,'a',2,2,NULL),(11,2,'-',4,5,'3'),(44,19,'hgoehoge',4,44,'hogehoge'),(45,1,'aq',6,45,' '),(46,1,'aq',6,46,'5 m/m'),(47,1,'qazwsx',7,47,' '),(48,1,'cq',7,48,' '),(49,1,'-',4,49,'16 '),(50,20,'a',6,50,'2 m/m'),(51,20,'a',7,51,' ');
-/*!40000 ALTER TABLE `Experimentalprocedure` ENABLE KEYS */;
+LOCK TABLES `device_value_choices` WRITE;
+/*!40000 ALTER TABLE `device_value_choices` DISABLE KEYS */;
+INSERT INTO `device_value_choices` VALUES (1,15,1,NULL,NULL,NULL),(2,15,2,NULL,NULL,NULL),(3,15,3,NULL,NULL,NULL),(4,15,4,NULL,NULL,NULL),(5,15,5,NULL,NULL,NULL),(6,15,6,NULL,NULL,NULL),(7,23,1,NULL,NULL,NULL),(8,23,2,NULL,NULL,NULL),(9,23,3,NULL,NULL,NULL),(10,23,4,NULL,NULL,NULL),(11,23,5,NULL,NULL,NULL),(12,23,6,NULL,NULL,NULL),(13,5,NULL,'mL/min',NULL,NULL),(14,5,NULL,'mL/s',NULL,NULL),(15,5,NULL,'μL/min',NULL,NULL),(16,5,NULL,'μL/s',NULL,NULL),(17,5,NULL,'nL/min',NULL,NULL),(18,5,NULL,'nL/s',NULL,NULL),(19,11,NULL,'mL/min',NULL,NULL),(20,11,NULL,'mL/s',NULL,NULL),(21,11,NULL,'μL/min',NULL,NULL),(22,11,NULL,'μL/s',NULL,NULL),(23,11,NULL,'nL/min',NULL,NULL),(24,11,NULL,'nL/s',NULL,NULL),(25,6,NULL,'mL/min',NULL,NULL),(26,6,NULL,'mL/s',NULL,NULL),(27,6,NULL,'μL/min',NULL,NULL),(28,6,NULL,'μL/s',NULL,NULL),(29,6,NULL,'nL/min',NULL,NULL),(30,6,NULL,'nL/s',NULL,NULL),(31,12,NULL,'mL/min',NULL,NULL),(32,12,NULL,'mL/s',NULL,NULL),(33,12,NULL,'μL/min',NULL,NULL),(34,12,NULL,'μL/s',NULL,NULL),(35,12,NULL,'nL/min',NULL,NULL),(36,12,NULL,'nL/s',NULL,NULL);
+/*!40000 ALTER TABLE `device_value_choices` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Result`
+-- Table structure for table `devices`
 --
 
-DROP TABLE IF EXISTS `Result`;
+DROP TABLE IF EXISTS `devices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Result` (
-  `ID` int NOT NULL AUTO_INCREMENT,
-  `RunID` int NOT NULL,
-  `ProcedureID` int NOT NULL,
-  `Time` time NOT NULL,
-  `Value` float NOT NULL,
-  `Unit` varchar(50) NOT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `devices` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `experiment_title_id` int NOT NULL,
+  `device_name` varchar(200) NOT NULL,
+  `device_type_id` int NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+--
+-- Table structure for table `experiment_conditions`
+--
+
+DROP TABLE IF EXISTS `experiment_conditions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `experiment_conditions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `experiment_procedure_id` int NOT NULL,
+  `condition_title` varchar(200) NOT NULL,
+  `value` varchar(200) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `device_link_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+--
+-- Table structure for table `experiment_procedure_blocks`
+--
+
+DROP TABLE IF EXISTS `experiment_procedure_blocks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `experiment_procedure_blocks` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `experiment_procedure_id` int NOT NULL,
+  `experiment_block_order` int NOT NULL,
+  `device_id` int NOT NULL,
+  `action_id` int NOT NULL,
+  `detail` varchar(200) DEFAULT NULL,
+  `condition_id` int DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+--
+-- Table structure for table `experiment_procedures`
+--
+
+DROP TABLE IF EXISTS `experiment_procedures`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `experiment_procedures` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `experiment_title_id` int NOT NULL,
+  `experiment_procedure_order` int NOT NULL,
+  `experiment_procedure_title` varchar(200) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+--
+-- Table structure for table `experiment_titles`
+--
+
+DROP TABLE IF EXISTS `experiment_titles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `experiment_titles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `experiment_title` varchar(200) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+--
+-- Table structure for table `result_conditions`
+--
+
+DROP TABLE IF EXISTS `result_conditions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `result_conditions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `result_procedure_id` int NOT NULL,
+  `condition_title` varchar(200) NOT NULL,
+  `value` varchar(200) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+--
+-- Table structure for table `result_data`
+--
+
+DROP TABLE IF EXISTS `result_data`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `result_data` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `run_id` int NOT NULL,
+  `result_block_id` int NOT NULL,
+  `data` varchar(200) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Result`
+-- Dumping data for table `result_data`
 --
 
-LOCK TABLES `Result` WRITE;
-/*!40000 ALTER TABLE `Result` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Result` ENABLE KEYS */;
+LOCK TABLES `result_data` WRITE;
+/*!40000 ALTER TABLE `result_data` DISABLE KEYS */;
+/*!40000 ALTER TABLE `result_data` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Run`
+-- Table structure for table `result_devices`
 --
 
-DROP TABLE IF EXISTS `Run`;
+DROP TABLE IF EXISTS `result_devices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Run` (
-  `ID` int NOT NULL AUTO_INCREMENT,
-  `ExperimentID` int NOT NULL,
-  `Starting_date` datetime DEFAULT NULL,
-  `Comment` varchar(400) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `result_devices` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `run_id` int NOT NULL,
+  `device_name` varchar(200) NOT NULL,
+  `result_device_name` varchar(200) NOT NULL DEFAULT 'NoName',
+  `result_device_model` varchar(200) DEFAULT NULL,
+  `result_device_company` varchar(200) DEFAULT NULL,
+  `result_device_serialnumber` varchar(200) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+--
+-- Table structure for table `result_procedure_blocks`
+--
+
+DROP TABLE IF EXISTS `result_procedure_blocks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `result_procedure_blocks` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `result_procedure_id` int NOT NULL,
+  `result_block_order` int NOT NULL,
+  `result_device_id` int NOT NULL,
+  `action_name` varchar(200) NOT NULL,
+  `action_argument` varchar(200) NOT NULL,
+  `detail` varchar(200) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Run`
+-- Table structure for table `result_procedures`
 --
 
-LOCK TABLES `Run` WRITE;
-/*!40000 ALTER TABLE `Run` DISABLE KEYS */;
-INSERT INTO `Run` VALUES (1,2,'2021-11-14 01:25:40',NULL),(2,2,'2021-11-14 01:25:40',NULL),(3,2,'2021-11-14 01:49:53',NULL),(4,2,'2021-11-14 01:54:18',NULL),(5,2,'2021-11-14 01:57:55',NULL),(6,2,'2021-11-14 02:00:07',NULL),(7,2,'2021-11-14 02:01:33',NULL),(8,2,'2021-11-14 14:21:37',NULL),(9,1,'2021-11-14 14:37:53',NULL),(10,2,'2021-11-14 23:48:28',NULL),(11,2,'2021-11-14 23:51:31',NULL),(12,2,'2021-11-14 23:51:50',NULL),(13,2,'2021-11-15 01:01:58',NULL),(14,2,'2021-11-15 01:05:56',NULL),(15,2,'2021-11-15 01:09:39',NULL),(16,2,'2021-11-15 01:46:13',NULL),(17,2,'2021-11-15 02:47:50',NULL),(18,2,'2021-11-15 03:31:49','あいうえお'),(19,2,'2021-11-15 04:17:35','ああああ'),(20,2,'2021-11-15 05:26:40',NULL),(21,2,'2021-11-15 13:55:49',NULL),(22,2,'2021-11-16 15:33:25',NULL),(23,2,'2021-11-24 15:31:25','あいうえお'),(24,2,'2021-11-24 15:31:57',NULL),(25,2,'2021-11-24 15:32:01',NULL),(26,2,'2021-11-24 15:53:56',NULL),(27,2,'2021-11-24 15:54:53',NULL),(28,2,'2021-11-24 16:07:06',NULL),(29,2,'2021-11-24 16:09:58',NULL),(30,19,'2021-11-24 18:06:19',NULL),(31,19,'2021-11-24 18:11:38',NULL),(32,19,'2021-11-24 18:15:11',NULL),(33,2,'2021-11-24 18:26:37',NULL),(34,2,'2021-11-24 18:37:12',NULL),(35,2,'2021-11-24 18:39:24',NULL),(36,2,'2021-11-24 18:40:33',NULL),(37,2,'2021-11-24 18:43:49',NULL),(38,2,'2021-11-24 18:43:55',NULL),(39,19,'2021-11-24 18:50:08',NULL),(40,19,'2021-11-24 18:50:38',NULL),(41,2,'2021-12-01 13:05:12',NULL),(42,20,'2021-12-01 13:29:09',NULL),(43,20,'2021-12-01 13:36:35',NULL),(44,20,'2021-12-01 13:37:16',NULL),(45,2,'2021-12-07 01:08:53',NULL),(46,2,'2021-12-09 00:24:44',NULL),(47,2,'2021-12-09 12:58:10',NULL),(48,2,'2021-12-09 13:02:58',NULL),(49,2,'2021-12-09 17:07:54',NULL),(50,2,'2021-12-09 17:08:33',NULL),(51,2,'2021-12-10 00:59:38',NULL),(52,2,'2021-12-10 01:01:58',NULL),(53,2,'2021-12-10 01:04:24',NULL),(54,2,'2021-12-10 01:09:16',NULL),(55,2,'2021-12-10 01:13:29',NULL),(56,2,'2021-12-14 15:33:21',NULL),(57,19,'2021-12-14 15:48:22',NULL),(58,1,'2021-12-14 23:43:47','いろいろありすぎて難しい'),(59,1,'2021-12-16 03:23:29',NULL),(60,2,'2021-12-17 14:29:54',NULL),(61,2,'2021-12-18 12:50:32',NULL),(62,1,'2021-12-18 22:50:34',NULL),(63,2,'2021-12-18 22:56:33',NULL),(64,2,'2021-12-18 23:14:44',NULL),(65,2,'2021-12-18 23:25:50',NULL),(66,2,'2022-01-07 23:51:20',NULL),(67,2,'2022-01-09 15:57:44',NULL),(68,2,'2022-01-09 15:58:13',NULL),(69,1,'2022-01-09 19:36:01',NULL),(70,2,'2022-01-09 19:36:23',NULL),(71,1,'2022-01-12 13:41:01',NULL),(72,2,'2022-01-12 16:07:47',NULL),(73,2,'2022-01-12 17:19:48',NULL),(74,2,'2022-01-23 22:47:07',NULL),(75,2,'2022-01-23 22:48:16',NULL),(76,2,'2022-01-23 23:19:15',NULL),(77,2,'2022-02-07 21:07:39',NULL),(78,2,'2022-02-07 21:10:21',NULL),(79,1,'2022-02-08 16:31:06',NULL),(80,2,'2022-02-08 17:01:05',NULL),(81,20,'2022-02-08 17:08:58',NULL);
-/*!40000 ALTER TABLE `Run` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Username`
---
-
-DROP TABLE IF EXISTS `Username`;
+DROP TABLE IF EXISTS `result_procedures`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Username` (
-  `ID` int NOT NULL AUTO_INCREMENT,
-  `Name` varchar(50) NOT NULL,
-  `Mail` varchar(50) DEFAULT NULL,
-  `Belongs` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `result_procedures` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `run_id` int NOT NULL,
+  `result_procedure_order` int NOT NULL,
+  `result_procedure_title` varchar(200) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 --
--- Dumping data for table `Username`
+-- Table structure for table `runs`
 --
 
-LOCK TABLES `Username` WRITE;
-/*!40000 ALTER TABLE `Username` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Username` ENABLE KEYS */;
-UNLOCK TABLES;
+DROP TABLE IF EXISTS `runs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `runs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `result_title` varchar(200) NOT NULL,
+  `comment` varchar(500) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -204,4 +351,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-02-14  2:19:38
+-- Dump completed on 2022-10-27 10:44:19

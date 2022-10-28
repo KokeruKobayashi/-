@@ -3,10 +3,11 @@
 #コマンドライン引数オプション
 import argparse
 
-parser = argparse.ArgumentParser(description ='test')
+parser = argparse.ArgumentParser(description ='コマンドライン引数で動作を分岐')
 
-parser.add_argument('--ababa',help='test',action='store_true')
-
+parser.add_argument('--get',help='温度をget',action='store_true')
+parser.add_argument('--hontai',help='本体属性読み取り',action='store_true')
+parser.add_argument('--set',help='温度をset(整数)', type = int)
 
 args = parser.parse_args()
 
@@ -14,8 +15,6 @@ args = parser.parse_args()
 import serial
 import time
 
-#このコードは使っておりません
-"""
 #sirial通信開通
 ser = serial.Serial()
 ser.port = '/dev/ttyUSB0'
@@ -120,4 +119,3 @@ if args.set is not None:
     print(args.set)
 
 ser.close()    
-"""

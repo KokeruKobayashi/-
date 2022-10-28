@@ -1,19 +1,31 @@
 <template>
 <div>
+    <!-- 注意　recipe-edit-newのほうで、detailを表示するかどうかを判断しているので、もしAcyion.Argumentが増えたら、そっちも追加しないといけない -->
     <div v-show='selectedAction.Argument == "wait"'>
-        <input type='number' placeholder='Time' class='uk-input uk-width-1-4' @input="$emit('update:newDetailTemp', $event.target.value)"> seconds
+        <input type='number' placeholder='Time'  v-model='newDetailValueTemp' min='0' class='uk-input uk-width-1-4' @input="$emit('update:newDetailTemp', $event.target.value)"> seconds
     </div>
     <div v-show='selectedAction.Argument == "--irate" || selectedAction.Argument == "--wrate"'>
-       <input type='number' placeholder='Rate' class='uk-input uk-width-1-4' @input="$emit('update:newDetailTemp', $event.target.value)">
-       <select class='uk-select uk-width-1-4' @input="$emit('update:newDetailUnitTemp', $event.target.value)">
+       <input v-model='newDetailValueTemp' type='number' min='0' placeholder='Rate' class='uk-input uk-width-1-4' @input="$emit('update:newDetailTemp', $event.target.value)">
+       <select v-model='newDetailValueUnitTemp' class='uk-select uk-width-1-4' @input="$emit('update:newDetailUnitTemp', $event.target.value)">
            <option disabled :value='""' selected>--Unit--</option>
-           <option :value='"m/m"'>mL/min</option>
-           <option :value='"m/s"'>mL/s</option>
-           <option :value='"u/m"'>μL/min</option>
-           <option :value='"u/s"'>μL/s</option>
-           <option :value='"n/m"'>nL/min</option>
-           <option :value='"n/s"'>nL/s</option>
+           <option :value='"mL/min"'>mL/min</option>
+           <option :value='"mL/s"'>mL/s</option>
+           <option :value='"μL/min"'>μL/min</option>
+           <option :value='"μL/s"'>μL/s</option>
+           <option :value='"nL/min"'>nL/min</option>
+           <option :value='"nL/s"'>nL/s</option>
        </select>
+    </div>
+    <div v-show='selectedAction.Argument == "--changePos"'>
+        <select v-model='newDetailValueTemp' class='uk-select uk-width-1-4' @input="$emit('update:newDetailTemp', $event.target.value)">
+            <option disabled :value='""' selected>--Position--</option>
+            <option :value='1'>1</option>
+            <option :value='2'>2</option>
+            <option :value='3'>3</option>
+            <option :value='4'>4</option>
+            <option :value='5'>5</option>
+            <option :value='6'>6</option>
+        </select>
     </div>
 
 </div>
@@ -28,7 +40,8 @@ export default{
 
     data(){
         return{ 
-
+            newDetailValueTemp:null,
+            newDetailValueUnitTemp:'',
         }
     },
 
@@ -36,7 +49,10 @@ export default{
     },
 
     methods :{
-
+        resetValueUnit(){
+            this.newDetailValueTemp = null;
+            this.newDetailValueUnitTemp = '';
+        },
     },
 
     watch:{

@@ -2790,8 +2790,7 @@ function sortBy(elem, orderBy) {
   mounted: function mounted() {
     var _this = this;
 
-    this.socket = socket_io_client__WEBPACK_IMPORTED_MODULE_1__["default"].connect('http://' + window.location.host + ':8000');
-    this.socket = socket_io_client__WEBPACK_IMPORTED_MODULE_1__["default"].connect('http://localhost:8000'); //console.log(window.location.host);
+    this.socket = socket_io_client__WEBPACK_IMPORTED_MODULE_1__["default"].connect('http://' + window.location.host + ':8000'); //console.log(window.location.host);
 
     this.socket.on('connect', function () {
       console.log("connected to server as user");

@@ -19,6 +19,12 @@
      <button class="uk-button uk-button-danger" uk-toggle='target: #experiment-quit'>Finish this experiment</button>
      <div v-show='!experimentTitle.isDone && !isBreak'><span uk-spinner='ratio:0.7'></span>Running</div>
      <div v-show='isBreak'><span uk-icon='icon: minus-circle'></span>Breaking</div>
+     <div v-show='experimentTitle.statusMsg' class="uk-text-center box1">
+        <h2><font color="red">!! Notice !!</font></h2>
+        <p class="uk-text-large"><font color="red">
+        {{experimentTitle.statusMsg}}
+        </font></p>
+      </div>
      <p></p>
     <div v-if='!isBreak && !experimentTitle.isDone'>
       <button class="uk-button uk-button-danger" type="button" @click='procedureBreak'>Break</button>
@@ -65,7 +71,6 @@
             <td>
               <div>{{b.result}}</div>
             </td>
-            
           </tr>
         </tbody>
       </table>

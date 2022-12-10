@@ -5,9 +5,7 @@ const childProcess = require('child_process');
 const exec = util.promisify(childProcess.exec);
 
 //const serverAdress = '100.111.186.122';
-//const serverAdress = "pi0.local";
 const serverAdress = 'localhost';
-
 
 var clientData = {
   name : null,
@@ -26,10 +24,6 @@ var cors = {
   origins: ["http://10.249.80.69", "http://localhost"],
   methods: [ "GET", "POST"]
 }
-
-const { AsyncQueue, Worker, Latch} = require('./original_modules/asyc-queue.js');
-var task = new AsyncQueue();
-var w = new Worker(task);
 
 
 var srv = require('socket.io')(8002, cors);
@@ -59,68 +53,12 @@ let sstateProcedureOrder = null;
 let emargencyStopScript = [];
 let monitorScript = [];
 let monitorInterval = 5;//status監視の時間間隔[s]
-let isExit = false;
-
-//直接やり取り(使ってない/過去の遺物)
-srv.on('connection', function(socket){
-
-  console.log(" got connection");
-
-  /*テスト用のデバイスリスト
-  con.query("select * from devices", (err, res, fields) => {
-    console.log(res);
-    socket.emit("deviceList", res);
-  });
-  */
-
-  con.query("select * from param", (err, res, fields) => {
-    console.log(res);
-    socket.emit("paramList", res); 
-  });
-
-
-  socket.on('mycommand', function () {
-    console.log(" get command");
-    socket.emit('mycommandres' , { text: "yes"});
-  });
-
-  socket.on('destroyParam', function (p) {
-    console.log(" get destroyParam");
-    console.log(p);
-
-    con.query("delete from param where param = ? ", [p], (err, res, fields) => {
-
-      con.query("select * from param ", [p], (err, res, fields) => {
-        socket.emit("paramList", res);
-      });
-    });
-  });
-
-  socket.on('createParam', function (p) {
-    con.query("insert into param (param, value) values (?, ?)", [p.param, p.text], (err, res, fields) => {
-      con.query("select * from param ", [p], (err, res, fields) => {
-        socket.emit("paramList", res);
-      });
-    });
-  });
-
-  socket.on('measure', function (p) {
-    console.log(p);
-    exec("python3 a.py", (err, stdout, stderr)=>{
-      console.log(stdout);
-    });
-  });
-/*
-    con.query("insert into param (param, value) values (?, ?)", [p.param, p.text], (err, res, fields) => {
-*/
-
-});
 
 //サーバーとの通信
 client.on('connect', ()=>{
    console.log("connected to server");
 
-   con.query("select * from raspberrypi_informations ORDER BY id DESC",(err,res,fields) => {
+   con.query("select * from raspberrypi_informations",(err,res,fields) => {
      if(err){
       clientData.name = 'NoName';
       clientData.detail = null;
@@ -166,45 +104,39 @@ client.on('connect', ()=>{
 });
 
 function experimentDoingExec(a) {
-  task.enqueue(function(next){
-    if (a.procedure.usedDetail == null) {
-      if (a.procedure.argument == "--sample") {
-        exec(pythonArg + a.usedDevice.script + " " + a.procedure.argument + " " + a.samplingTime, (err,stdout,stderr) => {
-            client.emit('experimentRes',{res:stdout,procedure:a.procedure});
-            setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
-        });
-      } else {
-        exec(pythonArg + a.usedDevice.script + " "+a.procedure.argument,(err,stdout,stderr)=>{
-        if(stdout){
+  if (a.procedure.usedDetail == null) {
+    if (a.procedure.argument == "--sample") {
+      exec(pythonArg + a.usedDevice.script + " " + a.procedure.argument + " " + a.samplingTime, (err,stdout,stderr) => {
           client.emit('experimentRes',{res:stdout,procedure:a.procedure});
-          }else{
-            client.emit('experimentRes',{res:'not connected',procedure:a.procedure});
-          }
-          setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
-        });
+      });
+    } else {
+      exec(pythonArg + a.usedDevice.script + " "+a.procedure.argument,(err,stdout,stderr)=>{
+      if(stdout){
+        client.emit('experimentRes',{res:stdout,procedure:a.procedure});
+        }else{
+          client.emit('experimentRes',{res:'not connected',procedure:a.procedure});
         }
+      });
+      }
+    } else {
+      if (a.procedure.argument == "--setrun") {
+        exec(pythonArg + a.usedDevice.script + " "+a.procedure.argument+' '+a.lowTemp,(err,stdout,stderr)=>{
+          if(stdout){
+            client.emit('experimentRes',{res:stdout,procedure:a.procedure});
+            }else{
+              client.emit('experimentRes',{res:'not connected',procedure:a.procedure});
+            }
+        }); 
       } else {
-        if (a.procedure.argument == "--setrun") {
-          exec(pythonArg + a.usedDevice.script + " "+a.procedure.argument+' '+a.lowTemp,(err,stdout,stderr)=>{
-            if(stdout){
-              client.emit('experimentRes',{res:stdout,procedure:a.procedure});
-              }else{
-                client.emit('experimentRes',{res:'not connected',procedure:a.procedure});
-              }
-              setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
-          }); 
-        } else {
-        exec(pythonArg + a.usedDevice.script + " "+a.procedure.argument+' '+a.procedure.usedDetail,(err,stdout,stderr)=>{
-            if(stdout){
-              client.emit('experimentRes',{res:stdout,procedure:a.procedure});
-              }else{
-                client.emit('experimentRes',{res:'not connected',procedure:a.procedure});
-              }
-            setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
-         }); 
-        }
-    }
-  })
+      exec(pythonArg + a.usedDevice.script + " "+a.procedure.argument+' '+a.procedure.usedDetail,(err,stdout,stderr)=>{
+          if(stdout){
+            client.emit('experimentRes',{res:stdout,procedure:a.procedure});
+            }else{
+              client.emit('experimentRes',{res:'not connected',procedure:a.procedure});
+            }
+       }); 
+      }
+  }
 }
 //実験実行時の送信先
 client.on('experimentDoing',(a) =>{//送られてくるデータの形式 : a{procedure,usedDevice, lowTemp,samplingTime}
@@ -217,36 +149,31 @@ function waitTempAchievement(targetT, script, nowT = 20, lowTemp){ //温度の�
   timeDiff = Math.round(timeDiff);
   console.log("現在の温度  " + nowT + "  lowTemp "+ lowTemp)
 
-  if(isExit == false){
-    if((lowTemp-0.05) <= nowT || timeDiff> 1000 * 4 * maxTime){
-      startTimeS = new Date();
-      waitTempFor(targetT, script);
-    }else{
-      task.enqueue(function(next){
-        exec(pythonArg + script + " --get ",(e,r,f)=>{
-          //例外処理もないと詰む errorを吐き出すだけではなくて、それをmainに知らせる処理など
-          if(e){
-              console.log("error")
-          };
-          //温度を抽出
-          let t = Number(r.match(/\d+(?:\.\d+)?/))
-          client.emit('sstateNow',{temp:t, timeDiff:Math.round(timeDiff/1000), procedureOrder:sstateProcedureOrder});
-          setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
-          setTimeout(function(){waitTempAchievement(targetT,script,t, lowTemp)},1000 * interval);
-        }); 
-      });
-    }
+  //安全ストップほしいなあ
+
+  if((lowTemp-0.05) <= nowT || timeDiff> 1000 * 4 * maxTime){
+    startTimeS = new Date();
+    waitTempFor(targetT, script);
   }else{
-    isExit == false;
+      exec(pythonArg + script + " --get ",(e,r,f)=>{
+      //例外処理もないと詰む errorを吐き出すだけではなくて、それをmainに知らせる処理など
+      if(e){
+          console.log("error")
+      };
+      //温度を抽出
+      let t = Number(r.match(/\d+(?:\.\d+)?/))
+      client.emit('sstateNow',{temp:t, timeDiff:Math.round(timeDiff/1000), procedureOrder:sstateProcedureOrder});
+      setTimeout(function(){waitTempAchievement(targetT,script,t, lowTemp)},1000 * interval);
+      });
   }
+  
 };
 
 function waitTempFor(targetT, script) {
   var nowTime = new Date();
   var timeDiff = nowTime - startTimeS
   var timeDiffOld = Math.round((nowTime - startTimeA)/1000)
-  task.enqueue(function(next){
-    if (timeDiff < 1000 * 60 * 5) {
+  if (timeDiff < 1000 * 60 * 5) {
       exec(pythonArg + script + " --get ",(e,r,f)=>{
       if(e){
           console.log("error")
@@ -255,22 +182,16 @@ function waitTempFor(targetT, script) {
       let t = Number(r.match(/\d+(?:\.\d+)?/))
       console.log("現在の温度2  " + t)
       client.emit('sstateNow',{temp:t, timeDiff:timeDiffOld, procedureOrder:sstateProcedureOrder});
-      if(isExit == false){
-        setTimeout(function(){waitTempFor(targetT,script)},1000 * interval);
-      }else{
-        isExit == false;
-      }
-      setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
+      setTimeout(function(){waitTempFor(targetT,script)},1000 * interval);
       });
   } else {
     exec(pythonArg + script + " --set " + targetT, (e, r, f) => {
       if (e) {
         console.log(e);
       }
-      setTimeout(() => {next(); waitTempSteadystate(targetT, script, 0)}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
+        waitTempSteadystate(targetT, script, 0)
       });
-  } 
-  });
+  }
 }
 
 function waitTempSteadystate(targetT, script, count = 0){
@@ -286,29 +207,23 @@ function waitTempSteadystate(targetT, script, count = 0){
       sstateProcedure = {};
       return
   };
-  task.enqueue(function(next){
-    exec(pythonArg + script + " --get ",(e,r,f)=>{
-      //例外処理もないと詰む
-      if(e){
-          console.log("error")
-      };
-  
-      //温度を抽出
-      let t = Number(r.match(/\d+(?:\.\d+)?/));
-      console.log(count + " " + t + " ℃ " + timeDiffOld);
-      
-      client.emit('sstateNow', { temp: t, timeDiff: timeDiffOld, procedureOrder: sstateProcedureOrder });
-      if(isExit == false){
-        if(Math.abs(t - targetT) > tempErr){//誤差がでかいとき
-          setTimeout(function(){waitTempSteadystate(targetT,script,0)},1000 * interval);
-        }else{//誤差が許容内
-          setTimeout(function(){waitTempSteadystate(targetT,script,(count + 1))},1000 * interval);
-        }
-      }else{
-        isExit == false;
-      };
-      setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
-    });
+
+  exec(pythonArg + script + " --get ",(e,r,f)=>{
+    //例外処理もないと詰む
+    if(e){
+        console.log("error")
+    };
+
+    //温度を抽出
+    let t = Number(r.match(/\d+(?:\.\d+)?/));
+    console.log(count + " " + t + " ℃ " + timeDiffOld);
+    
+    client.emit('sstateNow', { temp: t, timeDiff: timeDiffOld, procedureOrder: sstateProcedureOrder });
+    if(Math.abs(t - targetT) > tempErr){//誤差がでかいとき
+    setTimeout(function(){waitTempSteadystate(targetT,script,0)},1000 * interval);
+    }else{//誤差が許容内
+    setTimeout(function(){waitTempSteadystate(targetT,script,(count + 1))},1000 * interval);
+    }
   });
 };
 
@@ -346,11 +261,9 @@ client.on('getEmargencyStopScript', (command) => {
 
 client.on('getMonitorScript', (command) => {
   monitorScript.push(command);
-  console.log(monitorScript);
 });
 
 function emargencyStop() {
-  isExit = true;
   emargencyStopScript.forEach(function (command) {
     exec(pythonArg + command, (e, r, f) => {
       if (e) {
@@ -366,22 +279,19 @@ client.on('emargencyStop', () => {
 
 function monitorStatus(){
     monitorScript.forEach(function(command){
-      task.enqueue(function(next){
-        exec(pythonArg + command, (e, r, f) => {
-          if (e) {
-            console.log(e);
+      exec(pythonArg + command, (e, r, f) => {
+        if (e) {
+          console.log(e);
+        }else{
+          if(r.indexOf('ERROR') != -1){
+            console.log(r);
+            clearInterval(setMonitorInterval);
+            client.emit("clientExitProcess")//他のclientのoffコマンドを実行する
+            emargencyStop();
           }else{
-            if(r.indexOf('ERROR') != -1){
-              console.log(r);
-              clearInterval(setMonitorInterval);
-              client.emit("clientExitProcess")//他のclientのoffコマンドを実行する
-              emargencyStop();
-            }else{
-              console.log(command + " OK");
-            }
+            console.log(command + " OK");
           }
-          setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
-        });
+        }
       });
     })
 }

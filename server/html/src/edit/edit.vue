@@ -6,6 +6,7 @@
             <li> <a href="#"> Add </a> </li>
             <li> <a href="#"> Reorder </a> </li>
             <li><a href="#"> Copy </a></li>
+            <li><a href="#"> Duplicate </a></li>
             <li><a href="#"> Edit </a></li>
             <li><a href="#"> All delete </a></li>
         </ul>
@@ -306,6 +307,13 @@
                 </div>
             </li>
 
+            <li><!-- ループ機能-->
+                <div class="uk-card uk-card-body uk-card-default">
+                    <edit-duplicate-block ref="editDuplicateBlock" :editBlockParent="editBlock" :conditionList="conditionList"
+                    :actionLinkList="actionLinkList" :valueChoiceList="valueChoiceList" @submitDuplicateCondition="submitDuplicateCondition"></edit-duplicate-block>
+                </div>
+            </li>
+
             <li><!-- 編集 -->
                 <div class="uk-card uk-card-body uk-card-default">
                     <ul class="uk-subnav uk-subnav-divider" uk-switcher='connect:#subnav-rename-procedure-contents' id='subnav-rename-procedure'>
@@ -318,7 +326,7 @@
                             <div class="box1">
                                 <p>
                                     select for delete<br>
-                                    double click for edit
+                                    double click to edit the outline title.
                                 </p>
                             </div>
                            <edit-outline ref="editOutline"
@@ -336,7 +344,7 @@
             <li>
                 <!-- タイトルを削除 -->
                 <div class="uk-card uk-card-body uk-card-default">
-                    <h4>Delete all about this experiment data</h4>
+                    <h4>Delete all about this experiment.</h4>
                     <button class="uk-button uk-button-danger uk-margin-small-right" type="button"
                         uk-toggle="target: #modal-delete">Delete</button>
                 </div>
@@ -344,7 +352,7 @@
                     <div class="uk-modal-dialog uk-modal-body">
                         <h2 class="uk-modal-title">Really?</h2>
                         <h3>{{editTitle.experiment_title}}</h3>
-                        <p>Are you sure to delete all about this experiment data?</p>
+                        <p>Are you sure to delete all about this experiment.</p>
                         <p class="uk-text-right">
                             <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
                             <button class="uk-button uk-button-danger uk-modal-close" type="button" @click='trashTitle()'>Delete</button>
@@ -363,6 +371,7 @@ import draggable from 'vuedraggable'
 import outlineTable from "./outline-table.vue"
 import editOutline from "./edit-outline.vue"
 import editBlockVue from "./edit-block.vue"
+import editDuplicateBlock from "./edit-duplicate-block.vue"
 
 function getUniqueStr(myStrong){
             var strong = 100000000000000;
@@ -419,6 +428,7 @@ export default {
     outlineTable,
     editOutline,
     editBlockVue,
+    editDuplicateBlock,
   },
 
   data(){
@@ -666,6 +676,10 @@ export default {
         trashTitle() {
             this.$emit("trashTitle",this.editTitle.id)
         },
+
+        submitDuplicateCondition(condition){
+            this.$emit("submitDuplicateCondition",condition)
+        }
   },
 
   watch:{
@@ -683,6 +697,7 @@ export default {
           this.resetCopiedOutline();
           this.$refs.editOutline.resetRevisedOutline(this.editOutline);
           this.$refs.editBlockVue.resetEditedOutline(this.editOutline);
+          this.$refs.editDuplicateBlock.resetEditedOutline(this.editOutline);
           this.makeUniqueKey(this.copiedOutline);
           this.makeUniqueKey(this.editOutline);
       },
@@ -694,8 +709,7 @@ export default {
       actionList: function(){//addのblockにおいて、deviceを選び直したときにdetailをリセット
         this.$set(this.addDetail,'value',null);
         this.$set(this.addDetail,'unit',null);
-      }
-
+      },
   },
 
   computed:{
@@ -828,7 +842,7 @@ export default {
         }
 
         return true
-      }
+      },
   }
 }
 </script>

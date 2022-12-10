@@ -13,8 +13,8 @@
     <li> <a href="#"> Client List </a> </li>
     <li> <a href='#'> Experiment </a></li>
     <li><a href='#'>RESULT</a></li>
-    <!--
     <li><a href='#'>SETTING</a></li>
+    <!--
     <li> <a href="#"> Receipe List </a> </li>
     <li> <a href='#'> NEW </a></li>
     -->
@@ -43,18 +43,20 @@
       <result :resultList="resultList" :resultOutlineList="resultOutlineList"
       @getResultInfo="getResultInfo"></result>
     </li>
-    <!--
-    <li><setting></setting></li>
-    -->
+    <li><setting :settingList="settingList" :settingDefaultList="settingDefaultList" @editSetting="editSetting"></setting></li>
   </ul>
 </div>
 
 <div v-show='isEdit'>
-  <ul class="uk-subnav uk-subnav-pill" uk-switcher='connect:#subnav-edit-contents' id='subnav-edit'>
-    <li> <a href="#"> EDIT </a> </li>
-  </ul>
   <div>
     <h3>{{editTitle.experiment_title}}</h3>
+  </div>
+
+  <ul class="uk-subnav uk-subnav-divider" uk-switcher='connect:#subnav-edit-contents' id='subnav-edit'>
+    <li> <a href="#"> EDIT MODE</a> </li>
+  </ul>
+  
+  <div>
     <button class="uk-button uk-button-primary uk-width-1-5" type="button" @click='completeEdit()'>Complete</button>
   </div>
 
@@ -65,7 +67,7 @@
         @submitOutline="submitOutline" @trashOutline="trashOutline" @submitRenamedOutline="submitRenamedOutline"
         @reorderOutline="reorderOutline" @copyOutline="copyOutline" @reorderBlock="reorderBlock"
         @submitBlock="submitBlock" @trashBlock="trashBlock" @reviseBlockDetail="reviseBlockDetail"
-        @submitReviseCondition="submitReviseCondition" @trashTitle="trashTitle"
+        @submitReviseCondition="submitReviseCondition" @trashTitle="trashTitle" @submitDuplicateCondition="submitDuplicateCondition"
         ref="flEdit"></fl-edit></li>
   </ul>
 </div>
@@ -172,6 +174,8 @@ export default {
       resultCondition:[],
       resultBlock:[],
       runInfo:{},
+      settingList:[],
+      settingDefaultList:[],
       editTitle: {},
       socket: null,
       isConnect: false,
@@ -197,6 +201,7 @@ export default {
 
   mounted(){
     this.socket=io.connect('http://' + window.location.host + ':8000');
+    //this.socket=io.connect('http://localhost:8000');
     //console.log(window.location.host);
       
     this.socket.on('connect', () => {
@@ -357,6 +362,11 @@ export default {
       this.alertWindowMsg = a; 
       ui.modal("#alert-window").show();
       alertSound.play();
+    });
+
+    this.socket.on("getSetting",(a,b)=>{
+      this.settingList = a;
+      this.settingDefaultList = b;
     })
   },
 
@@ -512,6 +522,14 @@ export default {
     stopAlert(){
      alertSound.pause();
     },
+
+    editSetting(array){
+      this.socket.emit("editSetting",array);
+    },
+
+    submitDuplicateCondition(condition){
+      this.socket.emit("submitDuplicateCondition",condition)
+    }
   },
 
   computed:{
@@ -563,7 +581,7 @@ export default {
     editDevice:function(){
       let device = this.recipeDevice.filter(x => x.experiment_title_id == this.editTitle.id);
       return device
-    }
+    },
 
   }
 

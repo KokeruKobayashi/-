@@ -26,8 +26,7 @@ let timeInfo = {
   maxNumber: 100, //何回取得したら定常とみなすのか
   interval: 3, //取得のインターバル second
   maxTime: 2400, //最大何秒定常待ちするか
-  tempStep: 0.5, //一度この差だけ低い温度で温度到達を待つ
-  monitorInterval: 5, //ステータス監視の間隔[s]
+  dTemp: 0.7, //一度この差だけ低い温度で温度到達を待つ
 };
 
 const noDeviceId = 6; //device_typesのなかの、noDeviceのidを指定(新規タイトル追加の際に
@@ -53,6 +52,12 @@ var runInfo = {};
 var keyToResultId = {};
 var samplingTime = 0;
 
+///0823///
+const { EventEmitter } = require("events");
+const { Console } = require("console");
+const ev = new EventEmitter();
+//////
+
 function createDate() {
   date = new Date();
   date =
@@ -73,7 +78,6 @@ function createDate() {
 
 const red = "\u001b[31m";
 const reset = "\u001b[0m";
-
 function sqlErrLog(title, err) {
   srvUser.emit("sqlErrLog", { title: title, err: err });
   console.log("\n" + red + title + reset);
@@ -258,7 +262,7 @@ function experimentDoing(clientRes, isAlreadyAdd = false) {
             client.to(usedDevice.ClientNumber).emit("experimentDoing", {
               procedure: nextProcedure,
               usedDevice: experimentDevice[nextProcedure.device_id],
-              lowTemp: nextProcedure.usedDetail - timeInfo.tempStep + 0.2,//0.2℃高い温度で設定
+              lowTemp: nextProcedure.usedDetail - timeInfo.dTemp,
             });
             break;
           case "--ready":
@@ -289,7 +293,7 @@ function experimentDoing(clientRes, isAlreadyAdd = false) {
         experimentTitle.isDone = true;
         console.log("done");
         srvUser.emit("experimentTitle", experimentTitle);
-        emitEmargencyStop(experimentDevice, true); //一応停止を実行する。
+        emitEmargencyStop(experimentDevice); //一応停止を実行する。
         getRunAll();
       }
     }
@@ -384,24 +388,6 @@ srvUser.on("connection", (socket) => {
     );
   }
 
-  function getSetting() {
-    con.query("SELECT * FROM settings ORDER BY id ASC LIMIT 6",(e,r,f)=>{
-      if(e){
-        sqlErrLog("getSetting",e);
-      }else{
-        timeInfo.tempErr = parseFloat(r[0].value);
-        timeInfo.maxNumber = parseFloat(r[1].value);
-        timeInfo.interval = parseFloat(r[2].value);
-        timeInfo.maxTime = parseFloat(r[3].value);
-        timeInfo.tempStep = parseFloat(r[4].value);
-        timeInfo.monitorInterval = parseFloat(r[5].value);
-      }
-      con.query("SELECT * FROM settings  WHERE id > 6 ORDER BY id ASC LIMIT 6",(er,re,fi)=>{
-        socket.emit("getSetting",r,re);//デフォルト値
-      })
-    });
-  }
-
   //実験手順一覧を送信
   function getAllRecipeProcedure() {
     getOutline();
@@ -413,7 +399,6 @@ srvUser.on("connection", (socket) => {
   socket.emit("deviceList", clientList);
   getAllRecipeProcedure();
   getDevice();
-  getSetting();
   socket.emit("experimentTitle", experimentTitle);
   socket.emit("experimentRecipe", experimentRecipe);
   socket.emit("isBreakFlag", isBreak);
@@ -810,313 +795,105 @@ srvUser.on("connection", (socket) => {
     });
   });
 
-  socket.on("copyOutline", function(newArray){
-    console.log(newArray);
+  socket.on("copyOutline", function (newArray) {
+    //console.log(newArray)
     let date = createDate();
-    let procedureId = 0;
-    let originalCondition = [];
+    let query = [];
 
-    var q = new Promise(function(resQ){//おまじない
-      resQ();
+    var p = new Promise(function (res) {
+      res();
     });
-
-    for(let i=0; i < newArray.length;i++){
-      // 変数は同じやつに代入する
-      q = q.then(makePromiseFunc(i));
+    for (var i = 0; i < newArray.length; i++) {
+      p = p.then(makePromiseFunc(i));
     }
-    q.then(function(){
+    p.then(function () {
       getAllRecipeProcedure();
-      getCondition();
-    })
-
-    function makePromiseFunc(idx){
-      return function(){
-        return new Promise(function(resQ,rejQ){
-
-          let query = [];
-          if(newArray[idx].isCopied){
+    });
+    function makePromiseFunc(idx) {
+      return function () {
+        return new Promise(function (res, rej) {
+          if (newArray[idx].isCopied == true) {
             query[0] = newArray[idx].experiment_title_id;
             query[1] = newArray[idx].experiment_procedure_order;
             query[2] = newArray[idx].experiment_procedure_title;
             query[3] = date;
-    
-            let procedureOldId = newArray[idx].id;
-    
-            var p = new Promise(function(res){//おまじない
-              res();
-            });
-    
-            p = p.then(insertCopiedProcedure());
-            p = p.then(insertCopiedCondition());
-            p = p.then(insertCopiedBlock());
-    
-            p.then(function(){
-              resQ();
-            })
-    
-            function insertCopiedProcedure(){
-              return function(){
-                return new Promise(function(res,rej){
-                  con.query("INSERT INTO experiment_procedures (experiment_title_id,experiment_procedure_order,experiment_procedure_title,created_at) VALUES (?)",
-                  [query],(e,r,f)=>{
-                    if(e){sqlErrLog("INSERT condition",e)}
-          
-                    procedureId = r.insertId;
-                    res();
-                  });
-                })
-              }
-            };
-    
-            function insertCopiedCondition(){
-              return function(){
-                return new Promise(function(res,rej){
-                  con.query("SELECT * FROM experiment_conditions WHERE experiment_procedure_id = ?",[procedureOldId],(e,r,f)=>{
-                    if(e){sqlErrLog("SELECT condition",e)}
-                    
-                    originalCondition = r;
-                    let conditionArray = r.map(function(elem){
-                      let array = [];
-                      array[0] = procedureId;
-                      array[1] = elem.condition_title;
-                      array[2] = elem.value;
-                      array[3] = elem.device_link_id;
-                      array[4] = date;
-                      return array
-                    });
-                    
-                    if(conditionArray.length > 0){
-                      con.query("INSERT INTO experiment_conditions (experiment_procedure_id,condition_title,value,device_link_id,created_at) VALUES ?",
-                      [conditionArray],(er,re,fi)=>{
-                        if(er){sqlErrLog("INSERT condition",er)}
-            
-                        let newFirstId = re.insertId;
-                        originalCondition.forEach(function(elem,index){
-                          elem.newId = newFirstId + index;
-                        })
-                        res();
-                      });
-                    }else{
-                      res();
-                    }
-    
-                  });  
-                })
-              }
-            };
-    
-            function insertCopiedBlock(){
-              return function(){
-                return new Promise(function(res,rej){
-                  con.query("SELECT * FROM experiment_procedure_blocks WHERE experiment_procedure_id = ?",[procedureOldId],(e,r,f)=>{
-                    if(e){sqlErrLog("SELECT block",e)}
-                    
-                    let blockArray = r.map(function(elem){
-                      let array = [];
-                      array[0] = procedureId;
-                      array[1] = elem.experiment_block_order;
-                      array[2] = elem.device_id;
-                      array[3] = elem.action_id;
-                      array[4] = elem.detail;
-                      array[6] = date;
-                      
-                      if(elem.condition_id == null){
-                        array[5] = null;
-                      }else{
-                        let newCondition = originalCondition.find((a)=> a.id === elem.condition_id);
-                        array[5] = newCondition.newId;
-                      }
-    
-                      return array
-                    });
 
-                    if(blockArray.length > 0){//blockArrayに何も入ってなかったらスキップ.あんまりないと思うけど
-                      con.query(`INSERT INTO experiment_procedure_blocks (experiment_procedure_id,experiment_block_order,device_id,action_id,detail,
-                        condition_id,created_at) VALUES ?`,[blockArray],(e,r,f)=>{
-                          if(e){sqlErrLog("INSERT block",e)}
-                          res();
+            con.query(
+              "INSERT INTO experiment_procedures (experiment_title_id,experiment_procedure_order,experiment_procedure_title,created_at) values (?)",
+              [query],
+              (e, r, f) => {
+                con.query(
+                  `SELECT id FROM  experiment_procedures  ORDER BY id DESC LIMIT 1`,
+                  (er, re, fi) => {
+                    let procedureId = re[0].id;
+                    con.query(
+                      `SELECT * FROM experiment_procedure_blocks where experiment_procedure_id = ?`,
+                      [newArray[idx].id],
+                      (errr, ress, fiel) => {
+                        let array = ress;
+                        var x = new Promise(function (res2) {
+                          res2();
                         });
-                    }else{
-                      res();
-                    }
-                    
-                  })
-                })
+                        for (var y = 0; y < array.length; y++) {
+                          x = x.then(PromiseFunc2(y));
+                        }
+                        x.then(function () {
+                          query = [];
+                          res(i);
+                        });
+                        function PromiseFunc2(idx2) {
+                          return function () {
+                            return new Promise(function (respond, reject) {
+                              let array2 = [];
+                              array2[0] = procedureId;
+                              array2[1] = array[idx2].experiment_block_order;
+                              array2[2] = array[idx2].device_id;
+                              array2[3] = array[idx2].action_id;
+                              array2[4] = array[idx2].detail;
+                              array2[5] = array[idx2].condition_id;
+                              array2[6] = date;
+                              con.query(
+                                `INSERT INTO experiment_procedure_blocks (experiment_procedure_id,experiment_block_order,
+                        device_id,action_id,detail,condition_id,created_at) VALUES (?)`,
+                                [array2],
+                                (e1, r1, f1) => {
+                                  array2 = [];
+                                  respond(y);
+                                }
+                              );
+                            });
+                          };
+                        }
+                      }
+                    );
+                  }
+                );
               }
-            };
-    
-    
-          }else{
+            );
+          } else {
             query[0] = newArray[idx].experiment_procedure_order;
             query[1] = date;
             query[2] = newArray[idx].id;
-            con.query("UPDATE experiment_procedures set experiment_procedure_order = ?, updated_at = ? where id = ?",query,(e, r, f) => {
-              resQ();
-            });
+            con.query(
+              "UPDATE experiment_procedures set experiment_procedure_order = ?, updated_at = ? where id = ?",
+              query,
+              (e, r, f) => {
+                query = [];
+                res(i);
+              }
+            );
           }
-        })
-      }
+        });
+      };
     }
   });
-
-  socket.on("submitDuplicateCondition",function(a){
-    //{condition:condition, outline:outline, originalOutline:originalOutline}
-    let date = createDate();
-    let procedureId = 0;
-    let conditionInserted = [];
-
-    let condition = a.condition;
-    let outline = a.outline;
-    let originalOutline = a.originalOutline;
-    let conditionCount = 0;
-
-
-    var q = new Promise(function(resQ){//おまじない
-      resQ();
-    });
-
-    for(let i=0; i < outline.length;i++){
-      // 変数は同じやつに代入する
-      q = q.then(makePromiseFunc(i));
-    }
-    q.then(function(){//最後にダブってる手順(元の手順)を削除する
-      trashOutline([a.originalOutline.id])
-    })
-
-    function makePromiseFunc(idx){
-      return function(){
-        return new Promise(function(resQ,rejQ){
-
-          let query = [];
-          if(outline[idx].isCopied){
-            query[0] = outline[idx].experiment_title_id;
-            query[1] = outline[idx].experiment_procedure_order;
-            query[2] = outline[idx].experiment_procedure_title + " (" + (conditionCount + 1) + ")" ;
-            query[3] = date;
-    
-            let procedureOldId = outline[idx].id;
-    
-            var p = new Promise(function(res){//おまじない
-              res();
-            });
-    
-            p = p.then(insertCopiedProcedure());
-            p = p.then(insertDuplicatedCondition());
-            p = p.then(insertCopiedBlock());
-    
-            p.then(function(){
-              resQ();
-            })
-    
-            function insertCopiedProcedure(){
-              return function(){
-                return new Promise(function(res,rej){
-                  con.query("INSERT INTO experiment_procedures (experiment_title_id,experiment_procedure_order,experiment_procedure_title,created_at) VALUES (?)",
-                  [query],(e,r,f)=>{
-                    if(e){sqlErrLog("INSERT condition",e)}
-          
-                    procedureId = r.insertId;
-                    res();
-                  });
-                })
-              }
-            };
-    
-            function insertDuplicatedCondition(){
-              return function(){
-                return new Promise(function(res,rej){
-                  
-                  conditionInserted = condition[conditionCount];
-                  let conditionArray = conditionInserted.map(function(elem){
-                    let array = [];
-                    array[0] = procedureId;
-                    array[1] = elem.condition_title;
-                    array[2] = elem.value;
-                    array[3] = elem.device_link_id;
-                    array[4] = date;
-                    return array
-                  });
-                  conditionCount++;
-                  
-                  if(conditionArray.length > 0){
-                    con.query("INSERT INTO experiment_conditions (experiment_procedure_id,condition_title,value,device_link_id,created_at) VALUES ?",
-                    [conditionArray],(er,re,fi)=>{
-                      if(er){sqlErrLog("INSERT condition",er)}
-          
-                      let newFirstId = re.insertId;
-                      conditionInserted.forEach(function(elem,index){
-                        elem.newId = newFirstId + index;
-                      })
-                      res();
-                    });
-                  }else{
-                    res();
-                  }
-  
-                });  
-              }
-            };
-    
-            function insertCopiedBlock(){
-              return function(){
-                return new Promise(function(res,rej){
-                  con.query("SELECT * FROM experiment_procedure_blocks WHERE experiment_procedure_id = ?",[procedureOldId],(e,r,f)=>{
-                    if(e){sqlErrLog("SELECT block",e)}
-                    
-                    let blockArray = r.map(function(elem){
-                      let array = [];
-                      array[0] = procedureId;
-                      array[1] = elem.experiment_block_order;
-                      array[2] = elem.device_id;
-                      array[3] = elem.action_id;
-                      array[4] = elem.detail;
-                      array[6] = date;
-                      
-                      if(elem.condition_id == null){
-                        array[5] = null;
-                      }else{
-                        let newCondition = conditionInserted.find((a)=> a.id === elem.condition_id);
-                        array[5] = newCondition.newId;
-                      }
-    
-                      return array
-                    });
-
-                    if(blockArray.length > 0){//blockArrayに何も入ってなかったらスキップ.あんまりないと思うけど
-                      con.query(`INSERT INTO experiment_procedure_blocks (experiment_procedure_id,experiment_block_order,device_id,action_id,detail,
-                        condition_id,created_at) VALUES ?`,[blockArray],(e,r,f)=>{
-                          if(e){sqlErrLog("INSERT block",e)}
-                          res();
-                        });
-                    }else{
-                      res();
-                    }
-                    
-                  })
-                })
-              }
-            };
-    
-    
-          }else{
-            query[0] = outline[idx].experiment_procedure_order;
-            query[1] = date;
-            query[2] = outline[idx].id;
-            con.query("UPDATE experiment_procedures set experiment_procedure_order = ?, updated_at = ? where id = ?",query,(e, r, f) => {
-              resQ();
-            });
-          }
-        })
-      }
-    }
-  });
-    
 
   socket.on("trashTitle", function (trashId) {
     //ネストする必要は無いが、同期処理がだるいのでネストする
     con.query(
       "DELETE FROM experiment_titles WHERE id in (?)",
-      [trashId],(e, r, f) => {
+      [trashId],
+      (e, r, f) => {
         con.query(
           "DELETE FROM devices WHERE experiment_title_id in (?)",
           [trashId],
@@ -1127,30 +904,32 @@ srvUser.on("connection", (socket) => {
         );
         con.query(
           "SELECT id FROM experiment_procedures WHERE experiment_title_id in (?)",
-          [trashId],(er, re, fi) => {
+          [trashId],
+          (er, re, fi) => {
             let trashOutlineId = [];
             re.forEach((obj) => {
               trashOutlineId.push(obj.id);
             });
-           trashOutline(trashOutlineId)
+            srvUser.emit("trashOutline", trashOutlineId);
           }
         );
       }
     );
   });
 
-
-  function trashOutline(trashId){
-    console.log("trashId: " + trashId)
+  socket.on("trashOutline", function (trashId) {
     con.query(
       "DELETE FROM experiment_procedures WHERE id in (?)",
-      [trashId],(e, r, f) => {
+      [trashId],
+      (e, r, f) => {
         con.query(
           "DELETE FROM experiment_procedure_blocks WHERE experiment_procedure_id in (?)",
-          [trashId],(er, re, fi) => {
+          [trashId],
+          (er, re, fi) => {
             con.query(
               "DELETE FROM experiment_conditions WHERE experiment_procedure_id in (?)",
-              [trashId],(err, res, fie) => {
+              [trashId],
+              (err, res, fie) => {
                 getAllRecipeProcedure();
                 getCondition();
               }
@@ -1159,10 +938,6 @@ srvUser.on("connection", (socket) => {
         );
       }
     );
-  }
-
-  socket.on("trashOutline", function (trashId) {
-    trashOutline(trashId)
   });
 
   socket.on("trashBlock", function (trashId) {
@@ -1226,20 +1001,6 @@ srvUser.on("connection", (socket) => {
         getCondition();
       }
     );
-  });
-
-  socket.on("editSetting",function(x){
-    console.log(x.length);
-    let day = createDate();
-    let i = 0;
-    x.forEach(function(elem){
-      con.query("UPDATE settings SET value = ?, updated_at = ? WHERE id = ?",[elem.value,day,elem.id],(e,r,f)=>{
-        i++;
-        if(i >= 6){
-          getSetting();
-        }
-      });
-    })
   });
 
   socket.on("getResultInfo", function (runId) {
@@ -1329,8 +1090,6 @@ srvUser.on("connection", (socket) => {
     experimentTitle = a.title;
     experimentCondition = a.condition;
     experimentOutline = a.outline;
-
-    experimentTitle.statusMsg = null;
 
     tempControllerRes = {};
 
@@ -1490,7 +1249,7 @@ srvUser.on("connection", (socket) => {
     }
   });
 
-  socket.on("experimentDone", function () {//完全終了。すべてをリセット
+  socket.on("experimentDone", function () {
     emitEmargencyStop(experimentDevice);
     experimentDevice = {};
     experimentRecipe = [];
@@ -1604,13 +1363,7 @@ function startMonitorStatus(){
   })
 }
 
-function emitEmargencyStop(device, isNormalDone = false) {
-  experimentTitle.isDone = true;
-  if(!isNormalDone){
-    experimentTitle.statusMsg = "Because of the error, this experiment was aborted."
-  }
-  srvUser.emit("experimentTitle", experimentTitle);
-
+function emitEmargencyStop(device) {
   //実行する
   Object.keys(device).forEach(function (key) {
     let deviceObj = device[key];

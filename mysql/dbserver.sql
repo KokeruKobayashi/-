@@ -341,6 +341,33 @@ CREATE TABLE `runs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
+--
+-- Table structure for table `settings`
+--
+
+DROP TABLE IF EXISTS `settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `argument` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
+  `explanation` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `value` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `settings`
+--
+
+LOCK TABLES `settings` WRITE;
+/*!40000 ALTER TABLE `settings` DISABLE KEYS */;
+INSERT INTO `settings` VALUES (1,'tempError','How much margin of error is acceptable? [℃]','0.45','2022-11-10 11:49:48'),(2,'samplingNumber','How many times is the data acquired considered steady-state? [-]','100','2022-11-10 11:49:48'),(3,'interval','Interval of temperature acquisition for steady-state [s]','3','2022-11-10 11:49:48'),(4,'maxTime','How much is maximum steady-state waiting time? [s]','2400','2022-11-10 11:49:48'),(5,'tempStep','Difference between the value used as a step and the desired set value for the temperature control. [℃]','0.7','2022-11-10 11:49:48'),(6,'monitorInterval','Interval for status monitoring [s]','5','2022-11-10 11:49:48'),(7,'dtempError','default','0.45',NULL),(8,'dsamplingNumber','default','100',NULL),(9,'dinterval','default','3',NULL),(10,'dmaxTime','default','2400',NULL),(11,'dtempStep','default','0.7',NULL),(12,'dmonitorInterval','default','5',NULL);
+/*!40000 ALTER TABLE `settings` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -351,4 +378,4 @@ CREATE TABLE `runs` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-10-27 10:44:19
+-- Dump completed on 2022-12-10 23:16:02

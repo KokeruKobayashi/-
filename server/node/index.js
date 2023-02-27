@@ -6,7 +6,7 @@ var dbsrv = {
   host: "localhost",
   user: "****",
   password: "****",
-  database: "dbserver",
+  database: "0202hokudaiKakunin",
   timezone: "utc",
   dateStrings: "date",
 };
@@ -52,6 +52,7 @@ var waitingTimer;
 var runInfo = {};
 var keyToResultId = {};
 var samplingTime = 0;
+let timeLogs = {};
 
 function createDate() {
   date = new Date();
@@ -138,8 +139,7 @@ function judgeFinishSteadyState(clientRes) {
   //{res:'success',procedure:sstateProcedure, timeElapsed:timeDiff}
   con.query(
     "INSERT INTO result_procedure_blocks (result_procedure_id, result_block_order, result_device_id, action_name, action_argument, detail, created_at) VALUES (?)",
-    [
-      [
+    [[
         clientRes.procedure.resultProcedureId,
         clientRes.procedure.experiment_block_order,
         experimentDevice[clientRes.procedure.device_id].resultId,
@@ -147,9 +147,7 @@ function judgeFinishSteadyState(clientRes) {
         clientRes.procedure.argument,
         clientRes.timeElapsed,
         createDate(),
-      ],
-    ],
-    (e, r, f) => {
+      ]],(e, r, f) => {
       if (e) {
         console.log(e);
       }
@@ -157,32 +155,28 @@ function judgeFinishSteadyState(clientRes) {
       experimentRecipe[procedureNumber - 1].result = clientRes.res.split("\n");
       experimentRecipe[procedureNumber - 1].usedDetail = clientRes.timeElapsed;
       srvUser.emit("experimentRecipe", experimentRecipe);
-    }
-  );
 
-  if (Object.keys(tempControllerRes).length) {
-    if (
-      clientRes.procedure.procedureOrder >
-      tempControllerRes.procedure.procedureOrder
-    ) {
-      tempControllerRes = clientRes;
-    }
-  } else {
-    tempControllerRes = clientRes;
-  }
-
-  if (zzz == zz) {
-    zzz = 0;
-    experimentDoing(tempControllerRes, true);
-  } else {
-    zzz++;
-  }
+      if (Object.keys(tempControllerRes).length) {//恒温槽が2個連続で定常待ちしていた場合
+        if (clientRes.procedure.procedureOrder > tempControllerRes.procedure.procedureOrder) {
+          tempControllerRes = clientRes;
+        }
+      } else {
+        tempControllerRes = clientRes;
+      }
+    
+      if (zzz == zz) {
+        zzz = 0;
+        experimentDoing(tempControllerRes, true);
+      } else {
+        zzz++;
+      }
+    });
 }
 
 //実験進行中の共通のプログラム
 function experimentDoing(clientRes, isAlreadyAdd = false) {
   //console.log("~~~~~~~~~~~");
-  console.log(clientRes);
+  //console.log(clientRes);
 
   if (!isExperimentQuit) {
     //console.log(clientRes.res);
@@ -213,7 +207,7 @@ function experimentDoing(clientRes, isAlreadyAdd = false) {
         }
       );
 
-      if(clientRes.res == "ERROR"){
+      if( (clientRes.res.indexOf("ERROR") !== -1) || (clientRes.res.indexOf("not connected") !== -1) ){
        emitEmargencyStop(experimentDevice); 
       }
     }
@@ -258,7 +252,7 @@ function experimentDoing(clientRes, isAlreadyAdd = false) {
             client.to(usedDevice.ClientNumber).emit("experimentDoing", {
               procedure: nextProcedure,
               usedDevice: experimentDevice[nextProcedure.device_id],
-              lowTemp: nextProcedure.usedDetail - timeInfo.tempStep + 0.2,//0.2℃高い温度で設定
+              lowTemp: nextProcedure.usedDetail - timeInfo.tempStep,
             });
             break;
           case "--ready":
@@ -344,10 +338,11 @@ srvUser.on("connection", (socket) => {
   function getBlock() {
     con.query(
       `SELECT a.id, a.experiment_procedure_id, a.experiment_block_order, a.device_id, a.action_id, a.detail, a.condition_id,
-    b.action, b.argument, b.is_result_flag, b.detail_number, c.device_name, c.device_type_id
+    b.action, b.argument, b.is_result_flag, b.detail_number, c.device_name, c.device_type_id, d.device_type_name
     FROM experiment_procedure_blocks a
     INNER JOIN actions b ON a.action_id = b.id
-    INNER JOIN devices c ON a.device_id = c.id;`,
+    INNER JOIN devices c ON a.device_id = c.id
+    INNER JOIN device_types d ON c.device_type_id = d.id;`,
       (err, res, fields) => {
         socket.emit("recipeBlock", res);
         if (err) {
@@ -1141,7 +1136,6 @@ srvUser.on("connection", (socket) => {
 
 
   function trashOutline(trashId){
-    console.log("trashId: " + trashId)
     con.query(
       "DELETE FROM experiment_procedures WHERE id in (?)",
       [trashId],(e, r, f) => {
@@ -1229,7 +1223,7 @@ srvUser.on("connection", (socket) => {
   });
 
   socket.on("editSetting",function(x){
-    console.log(x.length);
+    //console.log(x.length);
     let day = createDate();
     let i = 0;
     x.forEach(function(elem){
@@ -1254,6 +1248,19 @@ srvUser.on("connection", (socket) => {
         socket.emit("resultData", r);
       }
     );
+
+    con.query(
+      `SELECT a.id, a.run_id, a.value, a.result_device_id, a.created_at, b.device_name 
+       FROM result_time_logs a
+       INNER JOIN result_devices b ON a.result_device_id = b.id
+       WHERE a.run_id = ? ORDER BY b.device_name, a.created_at;`,
+      [runId],
+      (e, r, f) => {
+        socket.emit("resultTimeLogData", r);
+        if(e){
+          console.log(e)
+        }
+      });
 
     con.query(
       "SELECT * FROM result_devices WHERE run_id = ?",
@@ -1310,7 +1317,7 @@ srvUser.on("connection", (socket) => {
 
   socket.on("experimentStart", function (a) {
     /////title:recipeTitle, procedure:actualProcedure, device:actualDevice, condition:usedCondition, outline
-    function conso() {
+    function consa() {
       console.log(red + "title" + reset);
       console.log(a.title);
       console.log(red + "PROCEDURE" + reset);
@@ -1322,7 +1329,7 @@ srvUser.on("connection", (socket) => {
       console.log(red + "CONDITION" + reset);
       console.log(a.condition);
     }
-    //conso();
+    //consa();
 
     experimentDevice = a.device;
     experimentRecipe = a.procedure;
@@ -1351,11 +1358,7 @@ srvUser.on("connection", (socket) => {
     socket.emit("experimentTitle", experimentTitle);
     socket.emit("experimentRecipe", experimentRecipe);
 
-    emitScriptReset(experimentDevice, "emargencyStopReset");
-    emitScriptReset(experimentDevice, "monitorReset");
-    emitScript(experimentDevice,"--off","getEmargencyStopScript");
-    emitScript(experimentDevice,"--status","getMonitorScript");
-    startMonitorStatus();
+
 
     function experimentStart() {
       //下記{}内がすべて実行されてからスタート
@@ -1372,6 +1375,11 @@ srvUser.on("connection", (socket) => {
       });
 
       experimentDoing(firstProcedure);
+
+      emitScriptReset(experimentDevice, "emargencyStopReset");
+      emitScript(experimentDevice,"--off","getEmargencyStopScript");
+      timeLogs = {};
+      startMonitorStatusAndTemp();
     }
 
     {
@@ -1383,8 +1391,7 @@ srvUser.on("connection", (socket) => {
         Object.keys(experimentDevice).forEach(function (key) {
           con.query(
             "INSERT INTO result_devices (device_name, run_id, result_device_name, result_device_model, result_device_company, result_device_serialnumber, created_at) values (?)",
-            [
-              [
+            [[
                 experimentDevice[key].name,
                 runInfo.id,
                 experimentDevice[key].device,
@@ -1392,20 +1399,14 @@ srvUser.on("connection", (socket) => {
                 experimentDevice[key].company,
                 experimentDevice[key].serialnumber,
                 day,
-              ],
-            ],
-            (e, r, f) => {
-              con.query(
-                "SELECT id FROM result_devices WHERE created_at = ? AND device_name = ?",
-                [day, experimentDevice[key].name],
-                (er, re, fi) => {
-                  experimentDevice[key].resultId = re[0].id;
-                  j++;
-                  if (j == devLength) {
-                    experimentStart();
-                  }
+            ]],(e, r, f) => {
+              con.query("SELECT id FROM result_devices WHERE created_at = ? AND device_name = ?",[day, experimentDevice[key].name],(er, re, fi) => {
+                experimentDevice[key].resultId = re[0].id;
+                j++;
+                if (j == devLength) {
+                  experimentStart();
                 }
-              );
+             });
             }
           );
         });
@@ -1432,12 +1433,8 @@ srvUser.on("connection", (socket) => {
       const date = createDate();
       con.query(
         "INSERT INTO runs (result_title,created_at) VALUES (?)",
-        [[experimentTitle.experiment_title, date]],
-        (err, res, fields) => {
-          con.query(
-            "SELECT * FROM runs WHERE created_at = ? LIMIT 1",
-            date,
-            (err, res, fields) => {
+        [[experimentTitle.experiment_title, date]],(err, res, fields) => {
+          con.query("SELECT * FROM runs WHERE created_at = ? LIMIT 1",date,(err, res, fields) => {
               socket.emit("runInfo", res[0]);
               runInfo = res[0];
 
@@ -1448,12 +1445,7 @@ srvUser.on("connection", (socket) => {
                 con.query(
                   "INSERT INTO result_procedures (run_id, result_procedure_order, result_procedure_title, created_at) VALUES (?)",
                   [
-                    [
-                      runInfo.id,
-                      a.outlineOrder,
-                      a.experiment_procedure_title,
-                      date,
-                    ],
+                    [runInfo.id,a.outlineOrder,a.experiment_procedure_title,date,],
                   ],
                   (e, r, f) => {
                     con.query(
@@ -1552,6 +1544,22 @@ client.on("connection", (socket) => {
     srvUser.emit("sstateNow", a);
   });
 
+  
+  socket.on("tempTimeLog",(t,deviceId)=>{
+    let date  = createDate();
+    timeLogs[deviceId].time.unshift(date);
+    timeLogs[deviceId].data.unshift(t);
+    srvUser.emit("tempTimeLog",timeLogs);
+    if(Object.keys(runInfo).length){//実験は本当に進行中?
+      con.query("INSERT INTO result_time_logs (run_id,result_device_id,value,created_at) VALUES (?)",[[runInfo.id,deviceId,t,date]],(e,r,f)=>{
+        if(e){
+          sqlErrLog("tempTimeLog",e);
+        }
+      });
+    };
+  })
+  
+
   socket.on("clientActionResult", (result, device) => {
     srvUser.emit("clientActionResult", result, device);
   });
@@ -1584,9 +1592,7 @@ function emitScript(device, helpUsage, emitTarget) {
     if ("HelpUsage" in deviceObj) {
       if (deviceObj["HelpUsage"].includes(helpUsage)) {
         let scriptString = deviceObj.script + " " + helpUsage;
-        client
-          .to(deviceObj.ClientNumber)
-          .emit(emitTarget, scriptString);
+        client.to(deviceObj.ClientNumber).emit(emitTarget, scriptString);
         
         if(helpUsage == "--status"){
           statusEmitCNArray.push(deviceObj.ClientNumber);
@@ -1594,14 +1600,50 @@ function emitScript(device, helpUsage, emitTarget) {
       }
     }
   });
-  const set = new Set(statusEmitCNArray);
-  statusEmitArray = [...set];
-}
+  if(statusEmitCNArray.length > 0){
+    const set = new Set(statusEmitCNArray);
+    statusEmitArray = [...set];//status監視だけは送信先を記録しておく
+  };
+};
 
-function startMonitorStatus(){
-  statusEmitArray.forEach(function(clientNo){
-    client.to(clientNo).emit("startMonitorStatus");
-  })
+let tempEmitArray;
+function emitScriptByDeviceType(device,emitTarget){
+  let tempEmitCNArray = [];
+  tempEmitArray = [];
+  Object.keys(device).forEach(function (key){
+    let deviceObj = device[key];
+    if((deviceObj.device_type_name == "thermometer") || (deviceObj.device_type_name == "temperature controller")){
+      timeLogs[deviceObj.resultId] = {
+        time: [],
+        data: [],
+        device: deviceObj,
+      };//result_time_logsを実験中に表示する用
+
+      let scriptString = deviceObj.script + " --get";
+      let scriptOffString = deviceObj.script + " --off";
+      let scriptOnString = deviceObj.script + " --on";
+      client.to(deviceObj.ClientNumber).emit(emitTarget, {scriptString: scriptString, scriptOffString: scriptOffString, scriptOnString: scriptOnString, deviceId:deviceObj.resultId});
+      tempEmitCNArray.push(deviceObj.ClientNumber);
+    }
+  });
+  srvUser.emit("tempTimeLog",timeLogs);//初期値
+
+  if(tempEmitCNArray.length > 0){
+    const set = new Set(statusEmitCNArray);
+    tempEmitArray = [...set];//送信先を重複なく記録
+  };
+} 
+
+function startMonitorStatusAndTemp(){
+  emitScriptReset(experimentDevice, "monitorReset");
+  emitScript(experimentDevice,"--status","getMonitorScript");//各clientにstatus監視のスクリプトを送信
+  emitScriptByDeviceType(experimentDevice,"getMonitorTempScript");
+  statusEmitArray.forEach(function(clientNo){//それぞれのクライアントに対して開始の合図
+    client.to(clientNo).emit("startMonitorStatus",timeInfo.monitorInterval);
+  });
+  tempEmitArray.forEach(function(clientNo){//それぞれのクライアントに対して開始の合図
+    client.to(clientNo).emit("startMonitorTemp",timeInfo.monitorInterval);
+  });
 }
 
 function emitEmargencyStop(device, isNormalDone = false) {

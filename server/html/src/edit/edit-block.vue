@@ -17,7 +17,7 @@
                 <div>
                     <ul class="uk-subnav uk-subnav-divider" uk-switcher='connect:#subnav-edit-condition-contents' id='subnav-edit-condition-main'>
                         <li><a href="#"> Procedure </a></li>
-                        <li><a href="#"> Condition </a></li>
+                        <li><a href="#"> Experiment Condition </a></li>
                     </ul>
 
                     <ul class="uk-switcher uk-margin" id="subnav-edit-condition-contents">
@@ -56,13 +56,13 @@
                         </li>
                         <li>
                             <div>
-                                <h4 class="uk-card-title">Condition</h4>
+                                <h4 class="uk-card-title">Experiment condition</h4>
                                 <div v-if="editCondition.length !==0" class="uk-card uk-card-default uk-card-body">
                                     <div>
                                         <table class="uk-table uk-table-divider">
                                             <thead>
                                                 <tr>
-                                                    <th>Condition title</th>
+                                                    <th>Experiment Condition title</th>
                                                     <th>Value</th>
                                                     <th></th>
                                                 </tr>

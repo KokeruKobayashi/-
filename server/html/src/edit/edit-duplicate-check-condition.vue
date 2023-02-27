@@ -1,6 +1,6 @@
 <template>
 <div>
-    <h4 class="uk-card-title">Total number of the condition : {{condition.length}}</h4>
+    <h4 class="uk-card-title">Total number of the experiment condition : {{condition.length}}</h4>
     <div class="uk-card uk-card-default uk-card-body uk-height-max-large can-overflow">
         <div>
             <table class="uk-table uk-table-divider">

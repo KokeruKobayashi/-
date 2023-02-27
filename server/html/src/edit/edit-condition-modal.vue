@@ -2,14 +2,14 @@
 <div id="conditionEditModal" uk-modal bg-close="false">
     <div class='uk-modal-dialog'>
         <div class="uk-modal-header">
-            <h4>Revise the condition</h4>
+            <h4>Revise the experiment condition</h4>
         </div>
         <div class='uk-modal-body'>
             <div>
                 <table class="uk-table uk-table-divider uk-text-left">
                     <thead>
                         <tr>
-                        <th>Condition title</th>
+                        <th>Experiment Condition title</th>
                         <th>Original value</th>
                         </tr>
                     </thead>

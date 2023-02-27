@@ -10,8 +10,8 @@
       <h4 v-if="recipeData.length == 0">No recipe list</h4>
       <table class="uk-table uk-table-striped uk-table-hover uk-table-small mouse-pointer">
         <tbody>
-          <tr v-for="title in recipeData" :key="title.id">
-            <td @click="selectTitle(title)">{{title.experiment_title}}</td>
+          <tr v-for="(title) in recipeData" :key="title.id">
+            <td @click="selectTitle(title)" v-bind:class="{'highlight-td': activeTitle === title.id}">{{title.experiment_title}}</td>
           </tr>
         </tbody>
       </table>
@@ -26,10 +26,12 @@
           <div>
               <button v-show="selectedTitle.id !== 0" class="uk-button uk-button-default uk-width-1-4 min-button-size-2" type="button" 
                @click="editProcedure()">Edit</button>
+               <!--
               <button class="uk-button uk-button-primary uk-width-1-4 min-button-size-2" type="button" uk-toggle='target: #fl-recipe-repeat'
               v-if='!experimentTitle.isDoing' @click="duplicateOutline()">Run</button><P></P>
+              -->
               <button class="uk-button uk-button-primary min-button-size-2" type="button" uk-toggle='target: #fl-recipe-device'
-              v-if='!experimentTitle.isDoing' @click="shortcutExperimentStart()">Shortcut run</button>
+              v-if='!experimentTitle.isDoing' @click="shortcutExperimentStart()">Run</button>
           </div>
           <h4 v-if="recipeOutline.length == 0">No outline</h4>
           <ul class="uk-list uk-list-large uk-text-large">
@@ -104,6 +106,7 @@ export default{
           recipeBlock:[],
           recipeCondition:[],
           notConcatRecipeBlock:[],
+          activeTitle:0,
         }
     },
 
@@ -122,6 +125,12 @@ export default{
 
         selectTitle(title){
           this.selectedTitle = Object.assign({},title);
+
+          if(this.activeTitle !== title.id){
+            this.activeTitle = title.id;
+          }else{
+            this.activeTitle = 0;
+          }
 
           const outline = this.procedureData.filter(x => x.experiment_title_id === this.selectedTitle.id)
           outline.sort(function(first,second){

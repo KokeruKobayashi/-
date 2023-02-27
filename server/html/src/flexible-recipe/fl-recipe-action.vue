@@ -84,7 +84,7 @@
     <div class='uk-modal-dialog'>
         <div class="uk-modal-header">
             <h2 class="uk-modal-title">{{recipeTitle.experiment_title}}</h2>
-            <p>Set the condition</p>
+            <p>Set the experiment condition</p>
             <button class="uk-button uk-button-danger uk-modal-close" type="button" @click='resetSelect'>Cancel</button>
             <button class="uk-button uk-button-default uk-margin-small-right" type="button" uk-toggle="target: #fl-recipe-device" @click="makeProcedureInfo()">Next</button>
         </div>
@@ -99,7 +99,7 @@
                                 <table class="uk-table uk-table-divider">
                                     <thead>
                                         <tr>
-                                        <th>Condition title</th>
+                                        <th>Experiment condition title</th>
                                         <th>Value</th>
                                         </tr>
                                     </thead>
@@ -344,6 +344,7 @@ export default{
                 return {
                     device_name: x.device_name,
                     device_id: x.device_id,
+                    device_type_name: x.device_type_name,
                 }
             });
 
@@ -365,8 +366,10 @@ export default{
         experimentStart(){
             //重複なく選ぶ
             for(let i=0; i < this.procedureDevice.length; i++){
-                this.$set(this.raspiDevice[i], "name", this.procedureDevice[i].device_name)
-                this.$set(this.actualDevice, this.procedureDevice[i].device_id, this.raspiDevice[i]);
+                let  raspiObj = Object.assign({}, JSON.parse(JSON.stringify(this.raspiDevice[i])));
+                this.$set(raspiObj, "name", this.procedureDevice[i].device_name);//このままだとdeiceDataが書き換わってしまう
+                this.$set(raspiObj, "device_type_name", this.procedureDevice[i].device_type_name);
+                this.$set(this.actualDevice, this.procedureDevice[i].device_id,raspiObj);
                // this.$set(this.actualDevice[this.procedureDevice[i].device_id], 'device_name', this.procedureDevice[i].device_name);
             };
 

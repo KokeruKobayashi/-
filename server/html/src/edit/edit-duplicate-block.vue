@@ -24,14 +24,14 @@
             <div class="uk-width-2-3@m">
                 <div>
                     <div>
-                        <h4 class="uk-card-title">Condition</h4>
-                        <h5 v-if="editBlock.length == 0">No condition</h5>
+                        <h4 class="uk-card-title">Experiment condition</h4>
+                        <h5 v-if="editBlock.length == 0">No experiment condition</h5>
                         <div v-if="editCondition.length !==0" class="uk-card uk-card-default uk-card-body">
                             <div>
                                 <table class="uk-table uk-table-divider">
                                     <thead>
                                         <tr>
-                                            <th>Condition title</th>
+                                            <th>Experiment condition title</th>
                                             <th>Value</th>
                                         </tr>
                                     </thead>
@@ -57,7 +57,7 @@
                                 <th>Device</th>
                                 <th>Action</th>
                                 <th>Detail</th>
-                                <th>Condition title</th>
+                                <th>Experiment condition title</th>
                                 </tr>
                             </thead>
                             <tbody>

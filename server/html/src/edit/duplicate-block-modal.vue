@@ -5,11 +5,13 @@
             <div class="uk-modal-header">
                 <div class="uk-child-width-expand@s" uk-grid>
                     <div>
-                        <h4>Duplicate the condition.</h4>
+                        <h4>Duplicate the  experiment condition.</h4>
                     </div>
+                    <!-- ?マークのマークの操作説明実装はいらないか
                     <div class="uk-text-right">
                         <span uk-icon="question" class="inline-span" @click="openSubnav(4)"></span>
                     </div>
+                    -->
                 </div>
             </div>
             <div class='uk-modal-body'>

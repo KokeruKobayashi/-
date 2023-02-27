@@ -39,6 +39,14 @@ ser.parity = serial.PARITY_NONE
 
 ser.open()
 
+#ポジションが変わらない場合(ex. 1→1)にエラーが出るが、それを無視する
+#その代わり、ほんまにバルブが詰まってて切り替わらない場合もエラーが出ない。
+if args.changePos:
+    cmd = ';01,C0,0' + args.changePos + '\r\n'
+    res = serWrite(cmd)
+    print(resultDefault())
+
+"""
 if args.changePos:
     cmd = ';01,C0,0' + args.changePos + '\r\n'
     res = serWrite(cmd)
@@ -46,5 +54,7 @@ if args.changePos:
         print(resultERROR())
     else:
         print(resultDefault())
+"""
+
 
 ser.close()

@@ -144,13 +144,13 @@
                                                 <br>
                                                 <div>
                                                     <input class="uk-checkbox" type="checkbox" :value="true" v-model="addDetail.isNewCondition" name="addDetailCheck" id="addDetailCheck">
-                                                    <label for="addDetailCheck">this detail is saved as a condition.</label>
+                                                    <label for="addDetailCheck">this detail is saved as a experiment condition.</label>
                                                     <input v-show="addDetail.isNewCondition" v-model.trim='addDetail.conditionTitle' type='text' placeholder='condition title (ex. flow rate of regent A)' class='uk-input'>
                                                 </div>
                                             </div>
                                             <div v-show="conditionRadio == 'oldCondition'">
                                                 <select v-model="addDetail.fromCondition" class="uk-select uk-width-2-3">
-                                                    <option disabled :value="null" selected>--Condition--</option>
+                                                    <option disabled :value="null" selected>--Experiment condition--</option>
                                                     <option v-for="c in conditionChoice" :value="c.id" :key="c.id">[{{c.condition_title}}] {{c.value}}</option>
                                                 </select>
                                             </div>
@@ -260,7 +260,6 @@
                 <div class="uk-card uk-card-body uk-card-default">
                     <ul class="uk-subnav uk-subnav-divider" uk-switcher='connect:#subnav-copy-procedure-contents' id='subnav-copy-procedure'>
                         <li><a href="#"> Outline </a></li>
-                        <li><a href="#"> plocedure block </a></li>
                     </ul>
 
                     <ul class="uk-switcher uk-margin" id="subnav-copy-procedure-contents">
@@ -301,8 +300,6 @@
 
                             </div>
                         </li>
-
-                        <li></li>
                     </ul>
                 </div>
             </li>
@@ -704,6 +701,11 @@ export default {
 
       editBlock: function(){
           this.resetReorderBlock();
+          let indexNext = this.reorderedOutline.findIndex((a)=>{return a.isReorderSelected=true});
+          if(indexNext >= 0){
+            let selectedIdNext = this.reorderedOutline[indexNext].id;
+            this.selectedReorderOutline(indexNext,selectedIdNext);
+          }
       },
 
       actionList: function(){//addのblockにおいて、deviceを選び直したときにdetailをリセット

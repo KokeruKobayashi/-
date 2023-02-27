@@ -4,9 +4,7 @@ const util = require('util');//execをawaitさせる
 const childProcess = require('child_process');
 const exec = util.promisify(childProcess.exec);
 
-//const serverAdress = '100.111.186.122';
-//const serverAdress = "pi0.local";
-const serverAdress = 'localhost';
+const serverAdress = 'server.local';
 
 
 var clientData = {
@@ -18,7 +16,7 @@ var dbparam = {
   host: 'localhost',
   user: '****',
   password: '****',
-  database: 'dbclient',
+  database: 'db00',
 }
 
 var cors = {
@@ -50,16 +48,27 @@ let tempErr = 0.25 //どれくらいの誤差を許容するか ℃
 let maxNumber = 30 //何回取得したら定常とみなすのか
 let interval = 10 //取得のインターバル second
 let maxTime = 3600 //最大何秒定常待ちするか
-let dTemp = 0.7 //一度この差だけ低い温度で温度到達を待つ　
+let tempStep = 0.7 //一度この差だけ低い温度で温度到達を待つ　
 let sstateProcedure = {}; //手順情報を一時保存しておく
 let startTimeA = null; //温度昇温を初めた時間(achievement)
 let startTimeS = null; //定常状態待ちを初めた時間(Steadystate)
 let sstateProcedureOrder = null;
+let sstateDeviceId = 0;
 
 let emargencyStopScript = [];
 let monitorScript = [];
+let monitorTempScript = [];
 let monitorInterval = 5;//status監視の時間間隔[s]
 let isExit = false;
+let isWaitTempSteadystate = false;
+let isOffTemp = false;
+let tempSetting = null;
+
+
+function createKetaochi(x,beki){
+  let y = Math.floor(x * (10 ** beki))/(10 ** beki)
+  return y
+}
 
 //直接やり取り(使ってない/過去の遺物)
 srv.on('connection', function(socket){
@@ -185,6 +194,8 @@ function experimentDoingExec(a) {
         }
       } else {
         if (a.procedure.argument == "--setrun") {
+          tempSetting = Number(a.usedDevice.tempSetting);
+          isWaitTempSteadystate = false;
           exec(pythonArg + a.usedDevice.script + " "+a.procedure.argument+' '+a.lowTemp,(err,stdout,stderr)=>{
             if(stdout){
               client.emit('experimentRes',{res:stdout,procedure:a.procedure});
@@ -226,7 +237,8 @@ function waitTempAchievement(targetT, script, nowT = 20, lowTemp){ //温度の�
         exec(pythonArg + script + " --get ",(e,r,f)=>{
           //例外処理もないと詰む errorを吐き出すだけではなくて、それをmainに知らせる処理など
           if(e){
-              console.log("error")
+              console.log("error, waitTempAchievement");
+              console.log(e);
           };
           //温度を抽出
           let t = Number(r.match(/\d+(?:\.\d+)?/))
@@ -237,7 +249,7 @@ function waitTempAchievement(targetT, script, nowT = 20, lowTemp){ //温度の�
       });
     }
   }else{
-    isExit == false;
+
   }
 };
 
@@ -249,7 +261,8 @@ function waitTempFor(targetT, script) {
     if (timeDiff < 1000 * 60 * 5) {
       exec(pythonArg + script + " --get ",(e,r,f)=>{
       if(e){
-          console.log("error")
+        console.log("error, waitTempFor1");
+        console.log(e);
       };
       //温度を抽出
       let t = Number(r.match(/\d+(?:\.\d+)?/))
@@ -258,15 +271,17 @@ function waitTempFor(targetT, script) {
       if(isExit == false){
         setTimeout(function(){waitTempFor(targetT,script)},1000 * interval);
       }else{
-        isExit == false;
+        
       }
       setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
       });
   } else {
     exec(pythonArg + script + " --set " + targetT, (e, r, f) => {
       if (e) {
+        console.log("error, waitTempFor2");
         console.log(e);
       }
+      isWaitTempSteadystate = true;
       setTimeout(() => {next(); waitTempSteadystate(targetT, script, 0)}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
       });
   } 
@@ -290,7 +305,8 @@ function waitTempSteadystate(targetT, script, count = 0){
     exec(pythonArg + script + " --get ",(e,r,f)=>{
       //例外処理もないと詰む
       if(e){
-          console.log("error")
+        console.log("error, waitTempSteadyState");
+        console.log(e);
       };
   
       //温度を抽出
@@ -305,30 +321,39 @@ function waitTempSteadystate(targetT, script, count = 0){
           setTimeout(function(){waitTempSteadystate(targetT,script,(count + 1))},1000 * interval);
         }
       }else{
-        isExit == false;
+        
       };
+
       setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
     });
   });
 };
 
-client.on('judgeSteadyState',(a) =>{//a = {procedure:experimentRecipe[procedureNumber], usedDevice:usedDevice, time:time}
-  sstateProcedureOrder = a.procedure.procedureOrder; //一時保管 !!!同じラズパイで恒温槽を複数つなげたら不具合が生じる
+client.on('judgeSteadyState',(a) =>{//a = {procedure:experimentRecipe[procedureNumber], usedDevice:usedDevice, time:timeInfo}
+  sstateProcedureOrder = a.procedure.procedureOrder; //一時保管 !!!同じラズパイで恒温槽を複数つなげたら不具合が生じることに注意
   sstateProcedure = a.procedure;
-  tempErr = a.time.tempErr; 
-  maxNumber = a.time.maxNumber;
-  interval = a.time.interval;
-  maxTime = a.time.maxTime;
-  dTemp = a.time.dTemp;
+  sstateDeviceId = a.usedDevice.resultId;
+
+  isExit = false;
+  isWaitTempSteadystate = false;
+  
+  tempErr = Number(a.time.tempErr); 
+  maxNumber = Number(a.time.maxNumber);
+  interval = Number(a.time.interval);
+  maxTime = Number(a.time.maxTime);
+  tempStep = Number(a.time.tempStep) + 0.2;//0.2℃差が開いた温度で到達を待つ
   console.log("onJudge");
   console.log("maxTime = " + maxTime);
   console.log("T = " + a.usedDevice.tempSetting)
-  exec(pythonArg + a.usedDevice.script + " --get ",(err,res,fie)=>{
-    let t = Number(res.match(/\d+(?:\.\d+)?/));
-    var lowTemp = a.usedDevice.tempSetting - a.time.dTemp;
-    console.log(lowTemp)
-    startTimeA = new Date();
-    waitTempAchievement(a.usedDevice.tempSetting, a.usedDevice.script, t,lowTemp);
+  task.enqueue(function(next){
+    exec(pythonArg + a.usedDevice.script + " --get ",(err,res,fie)=>{
+      let t = Number(res.match(/\d+(?:\.\d+)?/));
+      var lowTemp = Number(a.usedDevice.tempSetting) - tempStep;
+      console.log(lowTemp)
+      startTimeA = new Date();
+      waitTempAchievement(a.usedDevice.tempSetting, a.usedDevice.script, t,lowTemp);
+      setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
+    });
   });
 });
 
@@ -338,6 +363,7 @@ client.on('emargencyStopReset', () => {
 
 client.on('monitorReset', () => {
   monitorScript = [];
+  monitorTempScript = [];
 });
 
 client.on('getEmargencyStopScript', (command) => {
@@ -349,14 +375,22 @@ client.on('getMonitorScript', (command) => {
   console.log(monitorScript);
 });
 
+client.on("getMonitorTempScript",(command)=>{
+  monitorTempScript.push(command);
+  console.log(monitorTempScript);
+})
+
 function emargencyStop() {
   isExit = true;
   emargencyStopScript.forEach(function (command) {
-    exec(pythonArg + command, (e, r, f) => {
-      if (e) {
-        console.log(e);
-      }
-    });
+    task.enqueue(function(next){
+      exec(pythonArg + command, (e, r, f) => {
+        if (e) {
+          console.log(e);
+        }
+        setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
+      });
+    })
   })
 };
 
@@ -387,12 +421,72 @@ function monitorStatus(){
 }
 
 let setMonitorInterval;
-client.on('startMonitorStatus',()=>{
-  setMonitorInterval = setInterval(monitorStatus,monitorInterval * 1000);
+client.on('startMonitorStatus',(time)=>{
+  setMonitorInterval = setInterval(monitorStatus,time * 1000);
+});
+
+function monitorTemp(){
+  monitorTempScript.forEach(function(elem){
+    task.enqueue(function(next){
+      exec(pythonArg + elem.scriptString, (e,r,f)=>{//温度をゲットする
+        if(e){
+          console.log(e);
+        }else{
+          let t = Number(r.match(/\d+(?:\.\d+)?/));
+          console.log(t)
+          console.log(elem)
+          if(elem.deviceId == sstateDeviceId && isWaitTempSteadystate){//恒温槽で定常待ちするデバイスの場合
+            tempTurnJudge(t,elem);
+          }
+          client.emit("tempTimeLog",t,elem.deviceId);
+          }
+          setTimeout(() => {next()}, 100);//100 ms後に次にtask実行。これによりシリアル通信のコマンドバッティングを防ぐ
+      });
+    })
+  })
+};
+
+function tempTurnJudge(t,elem){//温度が所定より上昇傾向にある場合、切る
+  if(t >= createKetaochi((tempSetting + tempErr),1)){
+    task.enqueue(function(next){
+      exec(pythonArg + elem.scriptOffString, (e,r,f)=>{
+        if(e){
+          console.log(e);
+        }else{
+          isOffTemp = true;
+          setTimeout(()=>{next()},100);
+        }
+      })
+    })
+  }
+
+  if(isOffTemp && t <= tempSetting){
+    console.log("つけ直す")
+    task.enqueue(function(next){
+      exec(pythonArg + elem.scriptOnString, (e,r,f)=>{
+        if(e){
+          console.log(e);
+        }else{
+          isOffTemp = false;
+          setTimeout(()=>{next(),100});
+        }
+      })
+    })
+  }
+}
+
+let setMonitorTempInterval;
+client.on('startMonitorTemp',(time)=>{
+  setMonitorTempInterval = setInterval(monitorTemp,time * 1000);
 });
 
 client.on('clearMonitorStatus',()=>{
   clearInterval(setMonitorInterval);
+  clearInterval(setMonitorTempInterval);
+  sstateDeviceId = 0;
+  isWaitTempSteadystate = false;
+  tempSetting = null;
+  isOffTemp = false
 });
 
 client.on('clientAction', (a) => {

@@ -4,8 +4,8 @@
     <div class="uk-card uk-card-body uk-card-default">
         <ul uk-accordion>
             <li v-for="elem in resultList" :key="elem.id">
-                <a class="uk-accordion-title" href="#">
-                    {{elem.created_at}} 　　　 {{elem.result_title}}
+                <a class="uk-accordion-title mouse-over" href="#">
+                     <span class="run-num-span">{{elem.id}} 　　{{elem.created_at}}</span>{{elem.result_title}}
                 </a>
                 <div class="uk-accordion-content">
                     <div class="uk-card uk-card-default uk-card-body">
@@ -67,3 +67,12 @@ export default {
     },
 }
 </script>
+<style scoped>
+.run-num-span {
+    width: 18em;
+    display: inline-block;
+}
+.mouse-over:hover{
+    background-color: #fff799;
+}
+</style>

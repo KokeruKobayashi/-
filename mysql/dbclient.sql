@@ -41,13 +41,13 @@ INSERT INTO `devices` VALUES (1,'test','model','company','1234-5678','test.py');
 UNLOCK TABLES;
 
 --
--- Table structure for table `raspberrypi_infomations`
+-- Table structure for table `raspberrypi_informations`
 --
 
-DROP TABLE IF EXISTS `raspberrypi_infomations`;
+DROP TABLE IF EXISTS `raspberrypi_informations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `raspberrypi_infomations` (
+CREATE TABLE `raspberrypi_informations` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `detail` varchar(200) DEFAULT NULL,
@@ -55,15 +55,6 @@ CREATE TABLE `raspberrypi_infomations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `raspberrypi_infomations`
---
-
-LOCK TABLES `raspberrypi_infomations` WRITE;
-/*!40000 ALTER TABLE `raspberrypi_infomations` DISABLE KEYS */;
-/*!40000 ALTER TABLE `raspberrypi_infomations` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

@@ -18,7 +18,7 @@
      <div v-show='experimentTitle.isDone'><span uk-icon="icon: check; ratio:1.2"></span>Done</div>
      <button class="uk-button uk-button-danger" uk-toggle='target: #experiment-quit'>Finish this experiment</button>
      <div v-show='!experimentTitle.isDone && !isBreak'><span uk-spinner='ratio:0.7'></span>Running</div>
-     <div v-show='isBreak'><span uk-icon='icon: minus-circle'></span>Breaking</div>
+     <div v-show='isBreak'><span uk-icon='icon: minus-circle'></span>Break</div>
      <div v-show='experimentTitle.statusMsg' class="uk-text-center box1">
         <h2><font color="red">!! Notice !!</font></h2>
         <p class="uk-text-large"><font color="red">
@@ -50,32 +50,47 @@
       <div v-if="sstateNow.temp !== null">Temperature : {{sstateNow.temp}} ℃</div>
      </div>
 
-      <table class="uk-table uk-table-hover uk-width-2-3">
-        <thead>
-          <tr>
-            <th></th>
-            <th></th>
-            <th>Device</th>
-            <th>Action</th>
-            <th>Detail</th>
-            <th>Result</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(b,index) in experimentRecipe" :key='b.procedureOrder'>
-            <td>{{index+1}}</td>
-            <td><span v-show='b.isDone' uk-icon="icon: check"></span></td>
-            <td>{{b.device_name}}</td>
-            <td>{{b.action}}</td>
-            <td>{{b.usedDetail}}</td>
-            <td>
-              <div>{{b.result}}</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <ul class="uk-subnav uk-subnav-divider" uk-switcher='connect:#experiment-process-contents' id='experiment-process'>
+        <li> <a href="#"> Experiment </a> </li>
+        <li> <a href="#"> Logs </a> </li>
+      </ul>
+
+      <ul class="uk-switcher uk-margin" id="experiment-process-contents">
+        <li>
+          <table class="uk-table uk-table-hover uk-width-2-3">
+            <thead>
+              <tr>
+                <th></th>
+                <th></th>
+                <th>Device</th>
+                <th>Action</th>
+                <th>Detail</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(b,index) in experimentRecipe" :key='b.procedureOrder'>
+                <td>{{index+1}}</td>
+                <td><span v-show='b.isDone' uk-icon="icon: check"></span></td>
+                <td>{{b.device_name}}</td>
+                <td>{{b.action}}</td>
+                <td>{{b.usedDetail}}</td>
+                <td>
+                  <div>{{b.result}}</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </li>
+        <li>
+          <experiment-log :timeLogs="timeLogs"></experiment-log>
+        </li>
+      </ul>
     </div> 
 
+
+
+    <!-- 以下モーダルウインドウ -->
     <div id='new-comment' uk-modal>
     <div class='uk-modal-dialog uk-modal-body'>
         <h2 class='uk-modal-title'>Add comment</h2>
@@ -101,8 +116,14 @@
 </template>
 
 <script>
+import experimentLog from './experiment-log.vue'
+
 export default {
-  props:['experimentTitle','experimentRecipe','runInfo','sstateNow'],
+  components:{
+    experimentLog,
+  },
+
+  props:['experimentTitle','experimentRecipe','runInfo','sstateNow','timeLogs'],
 
   data(){
     return{

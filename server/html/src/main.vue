@@ -3,6 +3,9 @@
 <h3 v-if="isConnect">Server working</h3>
 <h3 v-if="!isConnect"><font color='#4d47ff'>Server not working</font></h3>
 
+<!-- <test-cha2></test-cha2> -->
+<!-- <test-cha></test-cha> -->
+
 <!--
 <input @click="changeIsEdit()" class= 'uk-button uk-button-default' type='button'  value="テスト">
 -->
@@ -35,7 +38,7 @@
     </li>
     <li>
       <experiment ref='experimentChild' :experimentTitle='experimentTitle' :experimentRecipe='experimentRecipe'
-      :sstateNow="sstateNow"
+      :sstateNow="sstateNow" :timeLogs="timeLogs"
       @procedureBreak='procedureBreak' :runInfo='runInfo' @commentSubmit='commentSubmit'
       @experimentDone='experimentDone'></experiment>
     </li>
@@ -80,7 +83,7 @@
     <button class="uk-button uk-button-primary uk-width-1-5" type="button" @click='completeResult()'>Complete</button>
   </div>
   <ul class="uk-switcher uk-margin" id="result-check-contents">
-    <li><result-check :resultRun="resultRun" :resultData="resultData" :resultDevice="resultDevice" 
+    <li><result-check :resultRun="resultRun" :resultData="resultData" :resultTimeLogData="resultTimeLogData" :resultDevice="resultDevice" 
     :resultProcedure="resultProcedure" :resultCondition="resultCondition" :resultBlock="resultBlock"
     ref="result"></result-check></li>
   </ul>
@@ -108,11 +111,14 @@ import setting from './setting.vue';
 import io from 'socket.io-client';
 import ui from 'uikit';
 import clientList from './client-list.vue';
-import experiment from './experiment.vue';
+import experiment from './experiment/experiment.vue';
 import result from './result/result.vue';
 import flexibleRecipeList from './flexible-recipe/flexible-recipe-list.vue';
 import flEdit from './edit/edit.vue'
 import resultCheck from './result/result-check.vue';
+
+import testCha from './experiment/experiment-chart.vue'
+import testCha2 from './others/testchart2.vue'
 
 
 var cors = {
@@ -148,6 +154,8 @@ export default {
    setting,
    flEdit,
    resultCheck,
+   testCha,
+   testCha2,
   },
   data () {
     return {
@@ -169,6 +177,7 @@ export default {
       resultOutlineList:[],
       resultRun:{},
       resultData:[],
+      resultTimeLogData:[],
       resultDevice:[],
       resultProcedure:[],
       resultCondition:[],
@@ -177,6 +186,7 @@ export default {
       settingList:[],
       settingDefaultList:[],
       editTitle: {},
+      timeLogs:{},
       socket: null,
       isConnect: false,
       isEdit:false,
@@ -342,6 +352,10 @@ export default {
       this.resultData = a;
     });
 
+    this.socket.on("resultTimeLogData",(a)=>{
+      this.resultTimeLogData = a;
+    });
+
     this.socket.on("resultDevice",(a)=>{
       this.resultDevice = a;
     });
@@ -367,6 +381,10 @@ export default {
     this.socket.on("getSetting",(a,b)=>{
       this.settingList = a;
       this.settingDefaultList = b;
+    })
+
+    this.socket.on("tempTimeLog",(a)=>{
+      this.timeLogs = a;
     })
   },
 
